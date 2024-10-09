@@ -1,0 +1,17 @@
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_package.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_fifo.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_decompressor.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_control.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_regfile.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_cp_shifter.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_cp_muldiv.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_cp_bitmanip.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_cp_fpu.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_cp_cfu.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_cp_cond.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_alu.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_lsu.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu_pmp.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_cpu.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_bootloader_image.vhd
+/home/aleksadj/Desktop/RISC_V_PROJECT/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/core/neorv32_application_image.vhd

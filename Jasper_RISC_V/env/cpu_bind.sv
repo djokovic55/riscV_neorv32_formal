@@ -1,0 +1,65 @@
+
+// First add parameter values to RTL
+// Connect Parameters from RTL to Checker
+// Connect Signals from RTL to Checker
+
+bind neorv32_cpu checker_cpu #(
+
+.HART_ID(HART_ID),
+.VENDOR_ID(VENDOR_ID),
+.CPU_BOOT_ADDR(CPU_BOOT_ADDR),
+// .CPU_BOOT_ADDR(32'h00000000),
+.CPU_DEBUG_PARK_ADDR(CPU_DEBUG_PARK_ADDR),
+.CPU_DEBUG_EXC_ADDR(CPU_DEBUG_EXC_ADDR),
+.CPU_EXTENSION_RISCV_A(CPU_EXTENSION_RISCV_A),
+.CPU_EXTENSION_RISCV_B(CPU_EXTENSION_RISCV_B),
+.CPU_EXTENSION_RISCV_C(CPU_EXTENSION_RISCV_C),
+.CPU_EXTENSION_RISCV_E(CPU_EXTENSION_RISCV_E),
+.CPU_EXTENSION_RISCV_M(CPU_EXTENSION_RISCV_M),
+.CPU_EXTENSION_RISCV_U(CPU_EXTENSION_RISCV_U),
+.CPU_EXTENSION_RISCV_ZFINX(CPU_EXTENSION_RISCV_ZFINX),
+.CPU_EXTENSION_RISCV_ZICNTR(CPU_EXTENSION_RISCV_ZICNTR),
+.CPU_EXTENSION_RISCV_ZICOND(CPU_EXTENSION_RISCV_ZICOND),
+.CPU_EXTENSION_RISCV_ZIHPM(CPU_EXTENSION_RISCV_ZIHPM),
+.CPU_EXTENSION_RISCV_ZMMUL(CPU_EXTENSION_RISCV_ZMMUL),
+.CPU_EXTENSION_RISCV_ZXCFU(CPU_EXTENSION_RISCV_ZXCFU),
+.CPU_EXTENSION_RISCV_Sdext(CPU_EXTENSION_RISCV_Sdext),
+.CPU_EXTENSION_RISCV_Sdtrig(CPU_EXTENSION_RISCV_Sdtrig),
+.CPU_EXTENSION_RISCV_Smpmp(CPU_EXTENSION_RISCV_Smpmp),
+.FAST_MUL_EN(FAST_MUL_EN),
+.FAST_SHIFT_EN(FAST_SHIFT_EN),
+.REGFILE_HW_RST(REGFILE_HW_RST),
+.PMP_NUM_REGIONS(PMP_NUM_REGIONS),
+.PMP_MIN_GRANULARITY(PMP_MIN_GRANULARITY),
+.PMP_TOR_MODE_EN(PMP_TOR_MODE_EN),
+.PMP_NAP_MODE_EN(PMP_NAP_MODE_EN),
+.HPM_NUM_CNTS(HPM_NUM_CNTS),
+.HPM_CNT_WIDTH(HPM_CNT_WIDTH)
+)
+
+
+chk_cpu(
+
+// Signal List
+
+// Global Control (Processor Clocking and Processor Reset)
+
+.clk_i(clk_i),
+.clk_aux_i(clk_aux_i),
+.rstn_i(rstn_i),
+.sleep_o(sleep_o),
+.debug_o(debug_o),
+// interrupts --
+.msi_i(msi_i),
+.mei_i(mei_i),
+.mti_i(mti_i),
+.firq_i(firq_i),
+.dbi_i(dbi_i),
+// instruction bus interface --
+.ibus_req_o(ibus_req_o),
+.ibus_rsp_i(ibus_rsp_i),
+// data bus interface --
+.dbus_req_o(dbus_req_o),
+.dbus_rsp_i(dbus_rsp_i)
+
+);
