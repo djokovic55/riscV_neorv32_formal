@@ -78,15 +78,16 @@ sanity_check
 check_assumptions
 
 ## ------------------- SST Analysis ----------------- ##
-assert -set_helper *help*
+assert -set_helper *HELP_HIGH*
 
-assert -mark_proven *help*
+assert -mark_proven *HELP_HIGH*
 
 # prove -property *_check* -bg
-prove -property *next_pc_main_BEQ* -sst 6 -set helper 
-prove -property *pc_main_BEQ* -with_helpers -bg
+prove -property *TARGET* -sst 12 -set helper 
+prove -property *TARGET* -with_helpers -bg
+# prove -property *pc_main_BEQ* -with_helpers -bg
 
-task -create pc_BEQ_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*help_new*}
+task -create pc_BEQ_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH_NEW*}
 prove -bg -task {pc_BEQ_G}
 
 

@@ -206,6 +206,9 @@ input[33:0] dbus_rsp_i
 
   logic regs_we_gbox;
   assign regs_we_gbox = neorv32_cpu_regfile_inst.ctrl_i.rf_wb_en;
+
+  logic[31:0] next_ir_gbox;
+  assign next_ir_gbox = neorv32_cpu_control_inst.execute_engine.ir_nxt;
   ////////////////////////////////////////////////////////////////////////////////
   // AUX CODE 
   ////////////////////////////////////////////////////////////////////////////////
@@ -275,6 +278,12 @@ input[33:0] dbus_rsp_i
   logic[31:0] rs1_data, rs2_data, rd_data;
   logic[31:0] pc_jalr;
 
+  logic beq1_taken;
+  logic beq2_taken;
+  logic beq_not_taken; 
+  logic signed_imm32;
+  logic unsigned_imm32;
+
   // for case splitting
   logic sub_inst, or_inst, addi_inst, beq_inst, jal_inst, jalr_inst;
   
@@ -336,6 +345,13 @@ input[33:0] dbus_rsp_i
     beq_inst = 1'b0; 
     jal_inst = 1'b0; 
     jalr_inst = 1'b0;
+
+    beq1_taken = 1'b0;
+    beq2_taken = 1'b0;
+    beq_not_taken = 1'b0;
+
+    signed_imm32 = 1'b0;
+    unsigned_imm32 = 1'b0;
 
     // Decode Instruction
     case (opcode_gbox)
@@ -421,6 +437,10 @@ input[33:0] dbus_rsp_i
                   dut_inst_gbox[11:8],        // IMM[4:1]
                   1'b0                       // IMM[0]
                   };
+          if(imm32[31])
+            signed_imm32 = 1'b1;
+          else
+            unsigned_imm32 = 1'b1;
 
           // Branch can not affect registers, only PC
           // If there was previously only ADDI then here we should just keep the previous value 
@@ -434,17 +454,26 @@ input[33:0] dbus_rsp_i
           // inst_supported = BEQ_SWITCH;
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BEQ_SWITCH;
-            if(chosen_reg_data == rs2_data) 
+            if(chosen_reg_data == rs2_data) begin
+              beq1_taken = 1'b1;
               next_pc_assign(dut_pc_gbox + imm32);
+            end
             else
               pc_inc();
           end
           else if(rs2 == chosen_reg_ndc) begin
             inst_supported = BEQ_SWITCH;
-            if(rs1_data == chosen_reg_data)
+            if(rs1_data == chosen_reg_data) begin
+              beq2_taken = 1'b1;
               next_pc_assign(dut_pc_gbox + imm32);
+            end
             else
               pc_inc();
+          end
+          else begin
+            inst_supported = BEQ_SWITCH;
+            beq_not_taken = 1'b1;
+            pc_inc();
           end
         end
       end
@@ -507,12 +536,12 @@ input[33:0] dbus_rsp_i
   //                                |=>  neorv32_cpu_regfile_inst.reg_file[rd] == chosen_reg_data);
 
   // CHECK PC
-  ast_pc_main_check:                    assert property(!exception && pc_we_gbox && inst_supported && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
+  ast_pc_main:                    assert property(!exception && pc_we_gbox && inst_supported && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // Check one cycle earlier
-  ast_next_pc_main_check:               assert property(!exception && pc_we_gbox && inst_supported && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
+  ast_next_pc_main:               assert property(!exception && pc_we_gbox && inst_supported && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
   // ast_pc_main_check:                    assert property(pc_we_gbox && inst_supported && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // CHECK CHOSEN REG
-  ast_chosen_reg_check:                 assert property(!exception && regs_we_gbox && inst_supported && chosen_reg_flag && (rd == chosen_reg_ndc) |=> dut_regs_gbox[chosen_reg_ndc] == chosen_reg_data);
+  ast_chosen_reg:                 assert property(!exception && regs_we_gbox && inst_supported && chosen_reg_flag && (rd == chosen_reg_ndc) |=> dut_regs_gbox[chosen_reg_ndc] == chosen_reg_data);
 
   cov_beq_check_sanity:                 cover property((pc_we_gbox && inst_supported && !trap_event && chosen_reg_flag) && (opcode_gbox == OPCODE_BRANCH));
   
@@ -524,10 +553,28 @@ input[33:0] dbus_rsp_i
   // ast_pc_main_SUB_check:                assert property(!exception && pc_we_gbox && (inst_supported && sub_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // ast_pc_main_OR_check:                 assert property(!exception && pc_we_gbox && (inst_supported && or_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // ast_pc_main_ADDI_check:               assert property(!exception && pc_we_gbox && (inst_supported && addi_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
-  ast_pc_main_BEQ_check:                assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
+  ast_pc_main_BEQ:                assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   //Check one cycle earlier
-  ast_next_pc_main_BEQ_check:                assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
+  ast_next_pc_main_BEQ:           assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
+  ///////////////
+  // TARGET
+  ///////////////
+  property next_pc_BEQ_taken1_signed;
+    !exception && 
+    pc_we_gbox && 
+    (inst_supported && beq_inst) && 
+    beq1_taken && 
+    signed_imm32 && 
+    chosen_reg_flag 
+    |-> 
+    tb_pc_next == dut_next_pc_gbox;
+  endproperty
+  ast_next_pc_BEQ_taken1_signed_TARGET: assert property(next_pc_BEQ_taken1_signed);
+
   cov_BEQ:                              cover property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag && branch_taken);
+
+
+
   // ast_pc_main_JAL_check:                assert property(!exception && pc_we_gbox && (inst_supported && jal_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // ast_pc_main_JALR_check:               assert property(!exception && pc_we_gbox && (inst_supported && jalr_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
 
@@ -552,30 +599,59 @@ input[33:0] dbus_rsp_i
   // endgenerate
 
   ////////////////////////////////////////////////////////////////////////////////
-  // SST HELPERS for pc main BEQ check
+  // SST HELPERS for pc main BEQ check with CASE SPLIT (signed imm32 and chosen_reg_ndc == rs1)
   ////////////////////////////////////////////////////////////////////////////////
-  ast_pc_BEQ_no_branch_help_new:            assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag && !branch_taken |-> dut_next_pc_gbox == (dut_pc_gbox + 4));
-
-  property crd_rs1_no_branch_help;
+  property pc_BEQ_no_branch;
     !exception && 
+    pc_we_gbox && 
     (inst_supported && beq_inst) && 
     chosen_reg_flag && 
-    $past(rs1) == chosen_reg_ndc && 
-    $fell(branch_taken) 
+    !branch_taken 
     |-> 
-    $past(chosen_reg_data) != $past(rs2_data); 
+    dut_next_pc_gbox == (dut_pc_gbox + 4);
   endproperty
+  ast_pc_BEQ_no_branch_HELP_HIGH:       assert property(pc_BEQ_no_branch);
+
+  property next_ir_opcode_value;
+     next_ir_gbox[6:0] == '0 || 
+     next_ir_gbox[6:0] == OPCODE_ALUR || 
+     next_ir_gbox[6:0] == OPCODE_ALUR || 
+     next_ir_gbox[6:0] == OPCODE_ALUI || 
+     next_ir_gbox[6:0] == OPCODE_JAL || 
+     next_ir_gbox[6:0] == OPCODE_JALR || 
+     next_ir_gbox[6:0] == OPCODE_BRANCH;
+  endproperty
+  ast_next_ir_opcode_value_HELP_HIGH:   assert property(next_ir_opcode_value);
+
+  property exec_state;
+    !exception && 
+    exec_state_gbox != TRAP_ENTER && 
+    beq_inst 
+    |->
+    exec_state_gbox inside {RESTART, DISPATCH, EXECUTE, BRANCH, BRANCHED};
+  endproperty
+  ast_exec_state_HELP_HIGH_NEW:         assert property(exec_state);
+
+  // property crd_rs1_no_branch_help;
+  //   !exception && 
+  //   (inst_supported && beq_inst) && 
+  //   chosen_reg_flag && 
+  //   $past(rs1) == chosen_reg_ndc && 
+  //   $fell(branch_taken) 
+  //   |-> 
+  //   $past(chosen_reg_data) != $past(rs2_data); 
+  // endproperty
   // ast_crd_rs1_no_branch_help_new: assert property(crd_rs1_no_branch_help);
 
-  property crd_rs2_no_branch_help;
-    !exception && 
-    (inst_supported && beq_inst) && 
-    chosen_reg_flag && 
-    $past(rs2) == chosen_reg_ndc && 
-    $fell(branch_taken) 
-    |-> 
-    $past(chosen_reg_data) != $past(rs1_data); 
-  endproperty
+  // property crd_rs2_no_branch_help;
+  //   !exception && 
+  //   (inst_supported && beq_inst) && 
+  //   chosen_reg_flag && 
+  //   $past(rs2) == chosen_reg_ndc && 
+  //   $fell(branch_taken) 
+  //   |-> 
+  //   $past(chosen_reg_data) != $past(rs1_data); 
+  // endproperty
   // ast_crd_rs2_no_branch_help_new: assert property(crd_rs2_no_branch_help);
 
   //add_sub res
@@ -624,8 +700,8 @@ input[33:0] dbus_rsp_i
   logic[19:0] interrupts;
   assign interrupts = {msi_i, mei_i, mti_i, firq_i, dbi_i};
 
-  logic[32:0] inst_top;
-  assign inst_top = dbus_rsp_i[32:2];
+  logic[31:0] inst_top;
+  assign inst_top = ibus_rsp_i[33:2];
 
   logic[6:0] opcode_top;
   assign opcode_top = inst_top[6:0];
@@ -641,4 +717,10 @@ input[33:0] dbus_rsp_i
   asm_no_irqs: assume property(interrupts == '0);
   // Allow only supported instructions
   asm_only_supp_inst: assume property(inst_supported_top);
+  /*
+  How it is possible that opcode_gbox has different value in comparison to opcode_top?
+  Inspect ipb buffer?
+  How instruction in execute fase in retreived?
+  Inst top -> execute.ir ???
+  */
 endmodule
