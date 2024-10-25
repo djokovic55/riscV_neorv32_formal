@@ -83,7 +83,7 @@ assert -set_helper *HELP_HIGH*
 assert -mark_proven *HELP_HIGH*
 
 # prove -property *_check* -bg
-prove -property *TARGET* -sst 12 -set helper 
+prove -property *TARGET* -sst 6 -set helper 
 prove -property *TARGET* -with_helpers -bg
 # prove -property *pc_main_BEQ* -with_helpers -bg
 
