@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wavelist version="3">
-  <insertion-point-position>12</insertion-point-position>
+  <insertion-point-position>15</insertion-point-position>
   <wave>
     <expr>clk_i</expr>
     <label/>
@@ -68,6 +68,11 @@
     <radix>chk_cpu.opcode_gbox</radix>
   </wave>
   <wave collapsed="true">
+    <expr>chk_cpu.funct3</expr>
+    <label/>
+    <radix>chk_cpu.funct3</radix>
+  </wave>
+  <wave collapsed="true">
     <expr>chk_cpu.chosen_reg_ndc</expr>
     <label/>
     <radix>dec</radix>
@@ -121,11 +126,6 @@
     <expr>chk_cpu.jalr_inst</expr>
     <label/>
     <radix/>
-  </wave>
-  <wave collapsed="true">
-    <expr>chk_cpu.funct3</expr>
-    <label/>
-    <radix>chk_cpu.funct3</radix>
   </wave>
   <wave collapsed="true">
     <expr>chk_cpu.chosen_reg_data_next</expr>

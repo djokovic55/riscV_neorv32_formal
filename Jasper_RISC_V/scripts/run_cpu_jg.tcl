@@ -87,7 +87,13 @@ prove -property *TARGET* -sst 6 -set helper
 prove -property *TARGET* -with_helpers -bg
 # prove -property *pc_main_BEQ* -with_helpers -bg
 
-task -create pc_BEQ_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH_NEW*}
-prove -bg -task {pc_BEQ_G}
+# task -create pc_BEQ_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH_NEW*}
+# prove -bg -task {pc_BEQ_G}
+
+# task -create target_sanity_check -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*TARGET}
+# prove -bg -task {target_sanity_check}
+
+task -create helpers_sanity_check -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH*}
+prove -bg -task {helpers_sanity_check}
 
 

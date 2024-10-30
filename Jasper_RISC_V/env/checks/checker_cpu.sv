@@ -292,16 +292,20 @@ input[33:0] dbus_rsp_i
   logic[31:0] rs1_data, rs2_data, rd_data;
   logic[31:0] pc_jalr;
 
-  logic beq1_taken;
-  logic beq2_taken;
-  logic beq_not_taken; 
-  logic beq1_not_taken; 
-  logic beq2_not_taken; 
   logic signed_imm32;
   logic unsigned_imm32;
 
+  logic beq1_taken, beq2_taken, beq_not_taken, beq1_not_taken, beq2_not_taken;
+  logic bne1_taken, bne2_taken, bne_not_taken, bne1_not_taken, bne2_not_taken;
+  logic blt1_taken, blt2_taken, blt_not_taken, blt1_not_taken, blt2_not_taken;
+  logic bge1_taken, bge2_taken, bge_not_taken, bge1_not_taken, bge2_not_taken;
+  logic bltu1_taken, bltu2_taken, bltu_not_taken, bltu1_not_taken, bltu2_not_taken;
+  logic bgeu1_taken, bgeu2_taken, bgeu_not_taken, bgeu1_not_taken, bgeu2_not_taken;
+
   // for case splitting
   logic sub_inst, or_inst, addi_inst, beq_inst, jal_inst, jalr_inst;
+  logic bne_inst, blt_inst, bge_inst, bltu_inst, bgeu_inst;
+  logic branch_supported;
   
   assign rs1_data = dut_regs_gbox[rs1];
   assign rs2_data = dut_regs_gbox[rs2];
@@ -362,11 +366,48 @@ input[33:0] dbus_rsp_i
     jal_inst = 1'b0; 
     jalr_inst = 1'b0;
 
+    branch_supported = 1'b0;
+    bne_inst = 1'b0; 
+    blt_inst = 1'b0; 
+    bge_inst = 1'b0; 
+    bltu_inst = 1'b0; 
+    bgeu_inst = 1'b0;
+
     beq1_taken = 1'b0;
     beq2_taken = 1'b0;
     beq_not_taken = 1'b0;
     beq1_not_taken = 1'b0;
     beq2_not_taken = 1'b0;
+
+    bne1_taken = 1'b0;
+    bne2_taken = 1'b0;
+    bne_not_taken = 1'b0;
+    bne1_not_taken = 1'b0;
+    bne2_not_taken = 1'b0;
+
+    blt1_taken = 1'b0;
+    blt2_taken = 1'b0;
+    blt_not_taken = 1'b0;
+    blt1_not_taken = 1'b0;
+    blt2_not_taken = 1'b0;
+
+    bge1_taken = 1'b0;
+    bge2_taken = 1'b0;
+    bge_not_taken = 1'b0;
+    bge1_not_taken = 1'b0;
+    bge2_not_taken = 1'b0;
+
+    bltu1_taken = 1'b0;
+    bltu2_taken = 1'b0;
+    bltu_not_taken = 1'b0;
+    bltu1_not_taken = 1'b0;
+    bltu2_not_taken = 1'b0;
+
+    bgeu1_taken = 1'b0;
+    bgeu2_taken = 1'b0;
+    bgeu_not_taken = 1'b0;
+    bgeu1_not_taken = 1'b0;
+    bgeu2_not_taken = 1'b0;
 
     signed_imm32 = 1'b0;
     unsigned_imm32 = 1'b0;
@@ -463,12 +504,14 @@ input[33:0] dbus_rsp_i
         chosen_reg_flag_next = chosen_reg_flag;
         chosen_reg_data_next = chosen_reg_data;
 
-        beq_inst = 1'b1;
 
         ////////////////////////////////////////////////////////////////////////////////
         // BEQ
         ////////////////////////////////////////////////////////////////////////////////
         if(funct3 == BEQ) begin
+          beq_inst = 1'b1;
+          branch_supported = 1'b1;
+
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BEQ_SWITCH;
             if(chosen_reg_data == rs2_data) begin
@@ -502,15 +545,18 @@ input[33:0] dbus_rsp_i
         // BNE
         ////////////////////////////////////////////////////////////////////////////////
         if(funct3 == BNE) begin
+          bne_inst = 1'b1;
+          branch_supported = 1'b1;
+
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BNE_SWITCH;
             if(chosen_reg_data != rs2_data) begin
-              beq1_taken = 1'b1;
+              bne1_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin
-              beq_not_taken = 1'b1;
-              beq1_not_taken = 1'b1;
+              bne_not_taken = 1'b1;
+              bne1_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -519,12 +565,12 @@ input[33:0] dbus_rsp_i
           else if(rs2 == chosen_reg_ndc) begin
             inst_supported = BNE_SWITCH;
             if(rs1_data != chosen_reg_data) begin
-              beq2_taken = 1'b1;
+              bne2_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin 
-              beq_not_taken = 1'b1;
-              beq2_not_taken = 1'b1;
+              bne_not_taken = 1'b1;
+              bne2_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -534,15 +580,17 @@ input[33:0] dbus_rsp_i
         // BLT
         ////////////////////////////////////////////////////////////////////////////////
         if(funct3 == BLT) begin
+          blt_inst = 1'b1;
+
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BLT_SWITCH;
             if($signed(chosen_reg_data) < $signed(rs2_data)) begin
-              beq1_taken = 1'b1;
+              blt1_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin
-              beq_not_taken = 1'b1;
-              beq1_not_taken = 1'b1;
+              blt_not_taken = 1'b1;
+              blt1_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -551,12 +599,12 @@ input[33:0] dbus_rsp_i
           else if(rs2 == chosen_reg_ndc) begin
             inst_supported = BLT_SWITCH;
             if($signed(rs1_data) < $signed(chosen_reg_data)) begin
-              beq2_taken = 1'b1;
+              blt2_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin 
-              beq_not_taken = 1'b1;
-              beq2_not_taken = 1'b1;
+              blt_not_taken = 1'b1;
+              blt2_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -566,15 +614,17 @@ input[33:0] dbus_rsp_i
         // BGE
         ////////////////////////////////////////////////////////////////////////////////
         if(funct3 == BGE) begin
+          bge_inst = 1'b1;
+
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BGE_SWITCH;
             if($signed(chosen_reg_data) >= $signed(rs2_data)) begin
-              beq1_taken = 1'b1;
+              bge1_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin
-              beq_not_taken = 1'b1;
-              beq1_not_taken = 1'b1;
+              bge_not_taken = 1'b1;
+              bge1_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -583,12 +633,12 @@ input[33:0] dbus_rsp_i
           else if(rs2 == chosen_reg_ndc) begin
             inst_supported = BGE_SWITCH;
             if($signed(rs1_data) >= $signed(chosen_reg_data)) begin
-              beq2_taken = 1'b1;
+              bge2_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin 
-              beq_not_taken = 1'b1;
-              beq2_not_taken = 1'b1;
+              bge_not_taken = 1'b1;
+              bge2_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -599,15 +649,17 @@ input[33:0] dbus_rsp_i
         // BLTU
         ////////////////////////////////////////////////////////////////////////////////
         if(funct3 == BLTU) begin
+          bltu_inst = 1'b1;
+
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BLTU_SWITCH;
             if(chosen_reg_data < rs2_data) begin
-              beq1_taken = 1'b1;
+              bltu1_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin
-              beq_not_taken = 1'b1;
-              beq1_not_taken = 1'b1;
+              bltu_not_taken = 1'b1;
+              bltu1_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -616,12 +668,12 @@ input[33:0] dbus_rsp_i
           else if(rs2 == chosen_reg_ndc) begin
             inst_supported = BLTU_SWITCH;
             if(rs1_data < chosen_reg_data) begin
-              beq2_taken = 1'b1;
+              bltu2_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin 
-              beq_not_taken = 1'b1;
-              beq2_not_taken = 1'b1;
+              bltu_not_taken = 1'b1;
+              bltu2_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -632,15 +684,17 @@ input[33:0] dbus_rsp_i
         // BGEU
         ////////////////////////////////////////////////////////////////////////////////
         if(funct3 == BGEU) begin
+          bgeu_inst = 1'b1;
+
           if(rs1 == chosen_reg_ndc) begin
             inst_supported = BGEU_SWITCH;
             if(chosen_reg_data >= rs2_data) begin
-              beq1_taken = 1'b1;
+              bgeu1_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin
-              beq_not_taken = 1'b1;
-              beq1_not_taken = 1'b1;
+              bgeu_not_taken = 1'b1;
+              bgeu1_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -649,12 +703,12 @@ input[33:0] dbus_rsp_i
           else if(rs2 == chosen_reg_ndc) begin
             inst_supported = BGEU_SWITCH;
             if(rs1_data >= chosen_reg_data) begin
-              beq2_taken = 1'b1;
+              bgeu2_taken = 1'b1;
               tb_pc_next = dut_pc_gbox + imm32;
             end
             else begin 
-              beq_not_taken = 1'b1;
-              beq2_not_taken = 1'b1;
+              bgeu_not_taken = 1'b1;
+              bgeu2_not_taken = 1'b1;
               // pc_inc();
               tb_pc_next = dut_pc_gbox + 4;
             end
@@ -737,7 +791,7 @@ input[33:0] dbus_rsp_i
   // ast_pc_main_SUB_check:                assert property(!exception && pc_we_gbox && (inst_supported && sub_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // ast_pc_main_OR_check:                 assert property(!exception && pc_we_gbox && (inst_supported && or_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
   // ast_pc_main_ADDI_check:               assert property(!exception && pc_we_gbox && (inst_supported && addi_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
-  ast_pc_main_BEQ_TARGET:                      assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
+  ast_pc_main_BEQ:                      assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
 
   //Check one cycle earlier
 
@@ -745,6 +799,10 @@ input[33:0] dbus_rsp_i
   // TARGET
   ///////////////
   ast_next_pc_main_BEQ:          assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
+  ast_next_pc_main_BEQ_BNE_TARGET:          assert property(!exception && pc_we_gbox && (inst_supported && branch_supported) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
+
+
+
   property next_pc_BEQ_taken1_signed;
     !exception && 
     pc_we_gbox && 
@@ -801,11 +859,11 @@ input[33:0] dbus_rsp_i
   //   end
   // endgenerate
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // SST HELPERS for pc main BEQ check with CASE SPLIT (signed imm32 and chosen_reg_ndc == rs1)
-  ////////////////////////////////////////////////////////////////////////////////
-  // VIM GENERATE HELPER: 0w"tywiproperty <Esc>A;<Esc>oendpro<Esc>O\<BS>|-><Esc>Ocond<BS><BS><BS><BS>precodn<BS><BS>nd<Esc>joassert<Esc>joast_<Esc>"tpa_HELP_HIGH_NEW: <Esc>aassert property(<Esc>"tp<Esc>A;<Esc>o<Esc>
-  ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// SST HELPERS for pc main BEQ check with CASE SPLIT (signed imm32 and chosen_reg_ndc == rs1)
+////////////////////////////////////////////////////////////////////////////////
+// VIM GENERATE HELPER: 0w"tywiproperty <Esc>A;<Esc>oendpro<Esc>O\<BS>|-><Esc>Ocond<BS><BS><BS><BS>precodn<BS><BS>nd<Esc>joassert<Esc>joast_<Esc>"tpa_HELP_HIGH_NEW: <Esc>aassert property(<Esc>"tp<Esc>A;<Esc>o<Esc>
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // PC VALUE HELPERS
@@ -820,18 +878,47 @@ property pc_BEQ_no_branch;
   |-> 
   dut_next_pc_gbox == (dut_pc_gbox + 4);
 endproperty
-// PROVEN
-ast_pc_BEQ_no_branch_HELP_HIGH:       assert property(pc_BEQ_no_branch);
+// PROVEN - HARD TO PROVE IN LAST ITERATION
+// REMOVE?
+ast_pc_BEQ_no_branch_HELP:       assert property(pc_BEQ_no_branch);
 
+////////////////////////////////////////////////////////////////////////////////
+// BEQ NOT TAKEN
+////////////////////////////////////////////////////////////////////////////////
+property pc_DUT_BEQ_no_branch_mult_states;
+  !exception && 
+  (exec_state_gbox == DISPATCH || exec_state_gbox == BRANCH) && 
+  (inst_supported && beq_inst) && 
+  chosen_reg_flag && 
+  beq_not_taken
+  |-> 
+  dut_next_pc_gbox == (dut_pc_gbox + 4);
+endproperty
+ast_pc_DUT_BEQ_no_branch_mult_states_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states);
 
-property next_pc1_tb_beq;
+// *** FAILS ***
+// property pc_TB_BEQ_no_branch_mult_states;
+//   !exception && 
+//   (exec_state_gbox == DISPATCH || exec_state_gbox == BRANCH) && 
+//   (inst_supported && beq_inst) && 
+//   chosen_reg_flag && 
+//   beq_not_taken
+//   |-> 
+//   tb_pc_next == (tb_pc + 4);
+// endproperty
+// ast_pc_TB_BEQ_no_branch_mult_states_HELP_HIGH_NEW:       assert property(pc_TB_BEQ_no_branch_mult_states);
+
+////////////////////////////////////////////////////////////////////////////////
+// BEQ TAKEN
+////////////////////////////////////////////////////////////////////////////////
+property next_pc1_TB_beq;
 (beq1_taken || beq2_taken)
 && ((exec_state_gbox == BRANCH) || (exec_state_gbox == BRANCHED))
 |->
 tb_pc_next == dut_pc_gbox + imm32;
 endproperty
 // PROVEN
-ast_next_pc1_TB_beq_HELP_HIGH: assert property(next_pc1_tb_beq);
+ast_next_pc1_TB_beq_HELP_HIGH: assert property(next_pc1_TB_beq);
 
 property next_pc2_tb_beq;
 (beq1_taken || beq2_taken)
@@ -856,7 +943,8 @@ ast_next_pc1_DUT_beq_HELP_HIGH: assert property(next_pc1_dut_beq);
 ////////////////////////////////////////////////////////////////////////////////
 // *** CRITICAL PROPERTY - PROVEN WITH HELPERS ***
 ////////////////////////////////////////////////////////////////////////////////
-property next_pc2_dut_beq;
+// multiple states as precondition (dispatch phase)
+property next_pc2_dut_mstate_beq;
 (beq1_taken || beq2_taken)
 && (exec_state_gbox == DISPATCH)
 && !exception
@@ -864,8 +952,24 @@ property next_pc2_dut_beq;
 |->
 dut_next_pc_gbox == dut_pc_gbox + imm32;
 endproperty
-ast_next_pc2_DUT_beq_HELP_HIGH: assert property(next_pc2_dut_beq);
+//This won't work if interrupts are allowed because afer DISPATCH
+// system will enter TRAP state and there will be no branch 
+// PROBLEM: DISPATCH happens BEFORE trap event
+// ast_next_pc2_DUT_beq_HELP_HIGH: assert property(next_pc2_dut_mstate_beq);
 // ast_next_pc2_DUT_beq_TARGET: assert property(next_pc2_dut_beq);
+
+// single state as precondtion (pc_we last for one cycle)
+property next_pc2_dut_sstate_beq;
+(beq1_taken || beq2_taken)
+&& pc_we_gbox  
+&& !exception
+&& chosen_reg_flag
+|->
+dut_next_pc_gbox == dut_pc_gbox + imm32;
+endproperty
+// If precondition is only pc_we, then TRAP event already happend and this case won't be considered
+// SOLUTION: pc_we happens AFTER trap event
+ast_next_pc2_DUT_sstate_beq_HELP_HIGH: assert property(next_pc2_dut_sstate_beq);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Instr fields HELPERS
@@ -880,8 +984,9 @@ property next_ir_opcode_value;
     next_ir_gbox[6:0] == OPCODE_JALR || 
     next_ir_gbox[6:0] == OPCODE_BRANCH;
 endproperty
-// PROVEN
-ast_next_ir_opcode_value_HELP_HIGH:   assert property(next_ir_opcode_value);
+// PROVEN -> FAILS WHEN CONSTRAINTS WERE REMOVED
+// CEX: load instruction can happen
+// ast_next_ir_opcode_value_HELP_HIGH:   assert property(next_ir_opcode_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 // STATE HELPERS
@@ -920,8 +1025,8 @@ ast_exec_state2_HELP_HIGH: assert property(exec_state2);
 ////////////////////////////////////////////////////////////////////////////////
 
   // PROVEN
-ast_beq2_state_HELP_HIGH:         assert property($rose(beq2_taken) |-> exec_state_gbox == EXECUTE);
-ast_beq1_state_HELP_HIGH:         assert property($rose(beq1_taken) |-> exec_state_gbox == EXECUTE);
+ast_beq2_state_HELP_HIGH:         assert property(!exception && $rose(beq2_taken) |-> exec_state_gbox == EXECUTE);
+ast_beq1_state_HELP_HIGH:         assert property(!exception && $rose(beq1_taken) |-> exec_state_gbox == EXECUTE);
 
 ////////////////////////////////////////////////////////////////////////////////
 // If beq2 -> chosen_reg_ndc == rs2 && chosen_reg_data == rs2_data
@@ -929,28 +1034,28 @@ ast_beq1_state_HELP_HIGH:         assert property($rose(beq1_taken) |-> exec_sta
 ////////////////////////////////////////////////////////////////////////////////
 
 // PROVEN
-ast_beq2a_ndc_data_HELP_HIGH:      assert property($rose(beq2_taken) |-> chosen_reg_data == rs1_data);
+ast_beq2a_ndc_data_HELP_HIGH:      assert property(!exception && $rose(beq2_taken) |-> chosen_reg_data == rs1_data);
 // *HARD TO PROVE* -> PROVEN
-ast_beq2b_ndc_data_HELP_HIGH:      assert property(chosen_reg_flag && $rose(beq2_taken) |-> chosen_reg_data == rs2_data);
+ast_beq2b_ndc_data_HELP_HIGH:      assert property(!exception && chosen_reg_flag && $rose(beq2_taken) |-> chosen_reg_data == rs2_data);
 // *HARD TO PROVE* -> PROVEN
-ast_beq2c_ndc_data_HELP_HIGH:      assert property(chosen_reg_flag && (beq2_taken) |-> chosen_reg_data == rs2_data);
+ast_beq2c_ndc_data_HELP_HIGH:      assert property(!exception && chosen_reg_flag && (beq2_taken) |-> chosen_reg_data == rs2_data);
 
-ast_beq1a_ndc_data_HELP_HIGH:      assert property($rose(beq1_taken) |-> chosen_reg_data == rs2_data);
+ast_beq1a_ndc_data_HELP_HIGH:      assert property(!exception && $rose(beq1_taken) |-> chosen_reg_data == rs2_data);
 // *HARD TO PROVE* -> PROVEN
-ast_beq1b_ndc_data_HELP_HIGH:      assert property(chosen_reg_flag && $rose(beq1_taken) |-> chosen_reg_data == rs1_data);
+ast_beq1b_ndc_data_HELP_HIGH:      assert property(!exception && chosen_reg_flag && $rose(beq1_taken) |-> chosen_reg_data == rs1_data);
 // *HARD TO PROVE* -> PROVEN
-ast_beq1c_ndc_data_HELP_HIGH:      assert property(chosen_reg_flag && (beq1_taken) |-> chosen_reg_data == rs1_data);
+ast_beq1c_ndc_data_HELP_HIGH:      assert property(!exception && chosen_reg_flag && (beq1_taken) |-> chosen_reg_data == rs1_data);
 
 // *HARD TO PROVE* -> PROVEN
-ast_ndc_reg_HELP_HIGH: assert property((rd == chosen_reg_ndc) && inst_supported && chosen_reg_flag |-> dut_regs_gbox[rd] == chosen_reg_data);
+ast_ndc_reg_HELP_HIGH: assert property(!exception && (rd == chosen_reg_ndc) && inst_supported && chosen_reg_flag |-> dut_regs_gbox[rd] == chosen_reg_data);
 ////////////////////////////////////////////////////////////////////////////////
 // NDC DATA HELPERS - BEQ NOT TAKEN
 ////////////////////////////////////////////////////////////////////////////////
 
 // *HARD TO PROVE* -> PROVEN
-ast_no_beq_rs_data_HELP_HIGH:      assert property(chosen_reg_flag && beq_not_taken |-> rs1_data != rs2_data);
-ast_no_beq1_ndc_data_HELP_HIGH_NEW:      assert property(chosen_reg_flag && beq1_not_taken |-> rs1_data == chosen_reg_data);
-ast_no_beq2_ndc_data_HELP_HIGH_NEW:      assert property(chosen_reg_flag && beq2_not_taken |-> rs2_data == chosen_reg_data);
+ast_no_beq_rs_data_HELP_HIGH:      assert property(!exception && chosen_reg_flag && beq_not_taken |-> rs1_data != rs2_data);
+ast_no_beq1_ndc_data_HELP_HIGH_NEW:      assert property(!exception && chosen_reg_flag && beq1_not_taken |-> rs1_data == chosen_reg_data);
+ast_no_beq2_ndc_data_HELP_HIGH_NEW:      assert property(!exception && chosen_reg_flag && beq2_not_taken |-> rs2_data == chosen_reg_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 // AUX CHECK - CHECK SANITY
@@ -960,116 +1065,97 @@ ast_no_beq2_ndc_data_HELP_HIGH_NEW:      assert property(chosen_reg_flag && beq2
 ast_aux_chosen_flag:                  assert property(chosen_reg_flag_next |-> opcode_gbox == OPCODE_ALUI || opcode_gbox == OPCODE_BRANCH);
 
 ////////////////////////////////////////////////////////////////////////////////
-// INITAL PROPERTIES - NOT USED
+// CONSTRAINTS
 ////////////////////////////////////////////////////////////////////////////////
-// ast_pc: assert property(pc_we_gbox && !jump_ir_gbox && !trap_event |=> (pc == ($past(pc) + 4)) || ($past(pc) == pc));
 
-// ast_pc2_target: assert property(pc_we_gbox && pc != '0 && !jump_ir_gbox && !trap_event |=> pc == ($past(pc) + 4) || pc == ($past(pc) + 2));
+// input msi_i,
+// input mei_i,
+// input mti_i,
+// input[15:0] firq_i,
+// input dbi_i,
+// input[73:0] dbus_req_o,
+// input[33:0] dbus_rsp_i
 
-// ast_pc3_target: assert property(pc_we_gbox && pc != '0 && !jump_ir_gbox |=> pc == ($past(pc) + 4));
+logic[19:0] interrupts;
+assign interrupts = {msi_i, mei_i, mti_i, firq_i, dbi_i};
 
-// cov_same_pc: cover property(pc_we_gbox |=> ($past(pc) == pc));
-// Jump instruction (JALR) can always make an example of jumping to the same instruction causing pc to remain stable
-// ast_no_same_pc_if_initial: assert property(pc_we_gbox && pc != '0 && !jump_ir_gbox && !trap_event |=> !($past(pc) == pc));
-// cov_pc_we: cover property(pc_we_gbox[->3]);
+logic[31:0] inst_top;
+assign inst_top = ibus_rsp_i[33:2];
 
-// Jump analysis
-// cov_jump: cover property(pc_we_gbox && pc != '0 && !trap_event |=> !(pc == ($past(pc) + 4)) || ($past(pc) == pc));
+logic[6:0] opcode_top;
+logic[2:0] funct3_top;
+logic[6:0] funct7_top;
+logic[4:0] rd_top;
+logic[4:0] rs1_top;
+logic[4:0] rs2_top;
+logic[11:0] imm_beq_top;
+assign opcode_top = inst_top[6:0];
+assign funct7_top = inst_top[31:25];
+assign funct3_top = inst_top[14:12];
+assign rd_top  = inst_top[11:7];
+assign rs1_top = inst_top[19:15];
+assign rs2_top = inst_top[24:20];
 
-// cov_same_pc_after_inital_case_target: cover property(pc_we_gbox[=4] ##1 (!jump_ir_gbox && !trap_event && pc_we_gbox) |=> ($past(pc) == pc));
+assign imm_beq_top = {inst_top[31],      // IMM[12]
+                      inst_top[7],       // IMM[11]
+                      inst_top[30:25],   // IMM[10:5]
+                      inst_top[11:8],    // IMM[4:1]
+                      1'b0               // IMM[0]
+                      };
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // CONSTRAINTS
-  ////////////////////////////////////////////////////////////////////////////////
+logic inst_supported_top;
+/*
+How to assure that instruction is supported?
+  1. Supported opcode
+  2. Supported function fields
+  3. For insts that modifie regs, RD must be equal with NDC
+*/
+assign inst_supported_top = 
+                            // allowed function fields for R-type instructions
+                            (
+                              (opcode_top == OPCODE_ALUR) 
+                              && ((funct3_top == ADD_SUB) || (funct3_top == OR_funct3)) 
+                              && ((funct7_top == SUB) || (funct7_top == OR_funct7))
+                              // Additional condition that will assure instruction supportness
+                              // && (rd_top == chosen_reg_ndc)
+                            ) ||
 
-  // input msi_i,
-  // input mei_i,
-  // input mti_i,
-  // input[15:0] firq_i,
-  // input dbi_i,
-  // input[73:0] dbus_req_o,
-  // input[33:0] dbus_rsp_i
+                            // allowed function fields for I-type instructions
+                            (
+                              (opcode_top == OPCODE_ALUI) 
+                              && (funct3_top == ADDI) 
+                              // Additional condition that will assure instruction supportness
+                              // && (rd_top == chosen_reg_ndc)
+                            ) ||
 
-  logic[19:0] interrupts;
-  assign interrupts = {msi_i, mei_i, mti_i, firq_i, dbi_i};
+                            (opcode_top == OPCODE_JAL) ||
+                            (opcode_top == OPCODE_JALR) ||
 
-  logic[31:0] inst_top;
-  assign inst_top = ibus_rsp_i[33:2];
+                            // allowed function fields for B-type instructions
+                            (
+                              (opcode_top == OPCODE_BRANCH) 
+                              && (funct3_top == ADDI)
+                              // Additional branch constraints
+                              && (imm_beq_top < 10)
+                            );
 
-  logic[6:0] opcode_top;
-  logic[2:0] funct3_top;
-  logic[6:0] funct7_top;
-  logic[4:0] rd_top;
-  logic[4:0] rs1_top;
-  logic[4:0] rs2_top;
-  logic[11:0] imm_beq_top;
-  assign opcode_top = inst_top[6:0];
-  assign funct7_top = inst_top[31:25];
-  assign funct3_top = inst_top[14:12];
-  assign rd_top  = inst_top[11:7];
-  assign rs1_top = inst_top[19:15];
-  assign rs2_top = inst_top[24:20];
-
-  assign imm_beq_top = {inst_top[31],      // IMM[12]
-                        inst_top[7],       // IMM[11]
-                        inst_top[30:25],   // IMM[10:5]
-                        inst_top[11:8],    // IMM[4:1]
-                        1'b0               // IMM[0]
-                        };
-
-  logic inst_supported_top;
-  /*
-  How to assure that instruction is supported?
-    1. Supported opcode
-    2. Supported function fields
-    3. For insts that modifie regs, RD must be equal with NDC
-  */
-  assign inst_supported_top = 
-                              // allowed function fields for R-type instructions
-                              (
-                                (opcode_top == OPCODE_ALUR) 
-                                && ((funct3_top == ADD_SUB) || (funct3_top == OR_funct3)) 
-                                && ((funct7_top == SUB) || (funct7_top == OR_funct7))
-                                // Additional condition that will assure instruction supportness
-                                // && (rd_top == chosen_reg_ndc)
-                              ) ||
-
-                              // allowed function fields for I-type instructions
-                              (
-                                (opcode_top == OPCODE_ALUI) 
-                                && (funct3_top == ADDI) 
-                                // Additional condition that will assure instruction supportness
-                                // && (rd_top == chosen_reg_ndc)
-                              ) ||
-
-                              (opcode_top == OPCODE_JAL) ||
-                              (opcode_top == OPCODE_JALR) ||
-
-                              // allowed function fields for B-type instructions
-                              (
-                                (opcode_top == OPCODE_BRANCH) 
-                                && (funct3_top == ADDI)
-                                // Additional branch constraints
-                                && (imm_beq_top < 10)
-                              );
-
-  // logic[4:0] rs1_top, rs2_top, rd_top;
-  // assign rd_data_top = inst_top[11:7];
-  // assign rs1_data_top = inst_top[19:15];
-  // assign rs2_data_top = inst_top[24:20];
+// logic[4:0] rs1_top, rs2_top, rd_top;
+// assign rd_data_top = inst_top[11:7];
+// assign rs1_data_top = inst_top[19:15];
+// assign rs2_data_top = inst_top[24:20];
 
 
-  // Disable interrupts
-  asm_no_irqs: assume property(interrupts == '0);
-  // Allow only supported instructions
-  asm_only_supp_inst: assume property(inst_supported_top);
-  // Overconstrain imm32 value 
-  // asm_imm32: assume property(opcode_top == BRANCH |-> imm_beq_top == 12);
-  /*
-  How it is possible that opcode_gbox has different value in comparison to opcode_top?
-  Inspect ipb buffer?
-  How instruction in execute fase in retreived?
-  Inst top -> execute.ir ???
+// Disable interrupts
+// asm_no_irqs: assume property(interrupts == '0);
+// Allow only supported instructions
+// asm_only_supp_inst: assume property(inst_supported_top);
+// Overconstrain imm32 value 
+// asm_imm32: assume property(opcode_top == BRANCH |-> imm_beq_top == 12);
+/*
+How it is possible that opcode_gbox has different value in comparison to opcode_top?
+Inspect ipb buffer?
+How instruction in execute fase in retreived?
+Inst top -> execute.ir ???
 
-  */
+*/
 endmodule
