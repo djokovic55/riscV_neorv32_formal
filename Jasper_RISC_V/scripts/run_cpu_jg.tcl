@@ -77,23 +77,46 @@ sanity_check
 # To check for assumption conflicts
 check_assumptions
 
-## ------------------- SST Analysis ----------------- ##
-assert -set_helper *HELP_HIGH*
+################################################################################
+# SST on top target
+################################################################################
 
+# assert -disable {*BNE_HELP*}
+
+### Mark all assertions with sufix HELP_HIGH as proven helpers -> 
+### Essentially used as assumptions to reduce the state space during the proof of the target property
+assert -set_helper *HELP_HIGH*
 assert -mark_proven *HELP_HIGH*
 
-# prove -property *_check* -bg
-prove -property *TARGET* -sst 6 -set helper 
-prove -property *TARGET* -with_helpers -bg
-# prove -property *pc_main_BEQ* -with_helpers -bg
+# Prove the target with helpers used as an assumptions (helpers marked as proven) -> ASSUME NODE
+# prove -property *SUBTARGET_LV1* -sst 6 -set helper 
+# prove -property *SUBTARGET_LV1* -with_helpers -bg
 
+### Guarantee node where new helpers should be proven first -> GUARANTEE NODE
 # task -create pc_BEQ_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH_NEW*}
 # prove -bg -task {pc_BEQ_G}
 
 # task -create target_sanity_check -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*TARGET}
 # prove -bg -task {target_sanity_check}
 
-task -create helpers_sanity_check -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH*}
-prove -bg -task {helpers_sanity_check}
+# It is better to prove all helpers together 
+# task -create helpers_sanity_check -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH*}
+# assert -enable {*BNE_HELP*}
+# prove -bg -task {helpers_sanity_check}
 
 
+################################################################################
+# SST on LV1 subtargets
+################################################################################
+### ASSUME NODE
+task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*SUBTARGET_LV1*} {*SUBHELP_LV1_HIGH*}}
+
+assert -set_helper *SUBHELP_LV1_HIGH*
+assert -mark_proven *SUBHELP_LV1_HIGH*
+
+prove -property *SUBTARGET_LV1* -sst 6 -set helper 
+prove -property *SUBTARGET_LV1* -with_helpers -bg
+
+### GUARANTEE NODE
+task -create subtarget_lv1_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*SUBHELP_LV1_HIGH*}
+prove -bg -task {subtarget_lv1_G}

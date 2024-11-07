@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wavelist version="3">
-  <insertion-point-position>15</insertion-point-position>
+  <insertion-point-position>7</insertion-point-position>
   <wave>
     <expr>clk_i</expr>
     <label/>
@@ -27,6 +27,16 @@
     <radix>chk_cpu.dut_regs_gbox(2)</radix>
   </wave>
   <wave collapsed="true">
+    <expr>neorv32_cpu_alu_inst.imm_i</expr>
+    <label/>
+    <radix/>
+  </wave>
+  <wave collapsed="true">
+    <expr>chk_cpu.imm32</expr>
+    <label/>
+    <radix/>
+  </wave>
+  <wave collapsed="true">
     <expr>chk_cpu.tb_pc</expr>
     <label/>
     <radix>chk_cpu.dut_pc_gbox</radix>
@@ -41,16 +51,6 @@
     <expr>neorv32_cpu_control_inst.execute_engine.state</expr>
     <label/>
     <radix>neorv32_cpu_control_inst.execute_engine.state</radix>
-  </wave>
-  <wave collapsed="true">
-    <expr>neorv32_cpu_alu_inst.imm_i</expr>
-    <label/>
-    <radix/>
-  </wave>
-  <wave collapsed="true">
-    <expr>chk_cpu.imm32</expr>
-    <label/>
-    <radix/>
   </wave>
   <wave>
     <expr>chk_cpu.branch_taken</expr>
