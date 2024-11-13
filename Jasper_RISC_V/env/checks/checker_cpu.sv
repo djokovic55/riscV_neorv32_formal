@@ -504,6 +504,9 @@ input[33:0] dbus_rsp_i
         chosen_reg_flag_next = chosen_reg_flag;
         chosen_reg_data_next = chosen_reg_data;
 
+        // If chosen reg flag is not set, that means that no supported instruction has updated it, hence its value is unknown
+        // In that case no decision about branch could be made by reference model
+
 
         ////////////////////////////////////////////////////////////////////////////////
         // BEQ -> PROVEN 
@@ -512,32 +515,33 @@ input[33:0] dbus_rsp_i
           beq_inst = 1'b1;
           // Checked in target property
           branch_supported = 1'b1;
+          if(chosen_reg_flag) begin 
+            if(rs1 == chosen_reg_ndc) begin
+              inst_supported = BEQ_SWITCH;
+              if(chosen_reg_data == rs2_data) begin
+                beq1_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin
+                beq_not_taken = 1'b1;
+                beq1_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
+            end
 
-          if(rs1 == chosen_reg_ndc) begin
-            inst_supported = BEQ_SWITCH;
-            if(chosen_reg_data == rs2_data) begin
-              beq1_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin
-              beq_not_taken = 1'b1;
-              beq1_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
-            end
-          end
-
-          else if(rs2 == chosen_reg_ndc) begin
-            inst_supported = BEQ_SWITCH;
-            if(rs1_data == chosen_reg_data) begin
-              beq2_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin 
-              beq_not_taken = 1'b1;
-              beq2_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
+            else if(rs2 == chosen_reg_ndc) begin
+              inst_supported = BEQ_SWITCH;
+              if(rs1_data == chosen_reg_data) begin
+                beq2_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin 
+                beq_not_taken = 1'b1;
+                beq2_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
           end
         end
@@ -550,31 +554,33 @@ input[33:0] dbus_rsp_i
           // Checked in target property
           branch_supported = 1'b1;
 
-          if(rs1 == chosen_reg_ndc) begin
-            inst_supported = BNE_SWITCH;
-            if(chosen_reg_data != rs2_data) begin
-              bne1_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
+          if(chosen_reg_flag) begin 
+            if(rs1 == chosen_reg_ndc) begin
+              inst_supported = BNE_SWITCH;
+              if(chosen_reg_data != rs2_data) begin
+                bne1_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin
+                bne_not_taken = 1'b1;
+                bne1_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
-            else begin
-              bne_not_taken = 1'b1;
-              bne1_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
-            end
-          end
 
-          else if(rs2 == chosen_reg_ndc) begin
-            inst_supported = BNE_SWITCH;
-            if(rs1_data != chosen_reg_data) begin
-              bne2_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin 
-              bne_not_taken = 1'b1;
-              bne2_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
+            else if(rs2 == chosen_reg_ndc) begin
+              inst_supported = BNE_SWITCH;
+              if(rs1_data != chosen_reg_data) begin
+                bne2_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin 
+                bne_not_taken = 1'b1;
+                bne2_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
           end
         end
@@ -586,31 +592,33 @@ input[33:0] dbus_rsp_i
           // Checked in target property
           branch_supported = 1'b1;
 
-          if(rs1 == chosen_reg_ndc) begin
-            inst_supported = BLT_SWITCH;
-            if($signed(chosen_reg_data) < $signed(rs2_data)) begin
-              blt1_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
+          if(chosen_reg_flag) begin 
+            if(rs1 == chosen_reg_ndc) begin
+              inst_supported = BLT_SWITCH;
+              if($signed(chosen_reg_data) < $signed(rs2_data)) begin
+                blt1_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin
+                blt_not_taken = 1'b1;
+                blt1_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
-            else begin
-              blt_not_taken = 1'b1;
-              blt1_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
-            end
-          end
 
-          else if(rs2 == chosen_reg_ndc) begin
-            inst_supported = BLT_SWITCH;
-            if($signed(rs1_data) < $signed(chosen_reg_data)) begin
-              blt2_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin 
-              blt_not_taken = 1'b1;
-              blt2_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
+            else if(rs2 == chosen_reg_ndc) begin
+              inst_supported = BLT_SWITCH;
+              if($signed(rs1_data) < $signed(chosen_reg_data)) begin
+                blt2_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin 
+                blt_not_taken = 1'b1;
+                blt2_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
           end
         end
@@ -622,31 +630,33 @@ input[33:0] dbus_rsp_i
           // Checked in target property
           branch_supported = 1'b1;
 
-          if(rs1 == chosen_reg_ndc) begin
-            inst_supported = BGE_SWITCH;
-            if($signed(chosen_reg_data) >= $signed(rs2_data)) begin
-              bge1_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
+          if(chosen_reg_flag) begin 
+            if(rs1 == chosen_reg_ndc) begin
+              inst_supported = BGE_SWITCH;
+              if($signed(chosen_reg_data) >= $signed(rs2_data)) begin
+                bge1_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin
+                bge_not_taken = 1'b1;
+                bge1_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
-            else begin
-              bge_not_taken = 1'b1;
-              bge1_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
-            end
-          end
 
-          else if(rs2 == chosen_reg_ndc) begin
-            inst_supported = BGE_SWITCH;
-            if($signed(rs1_data) >= $signed(chosen_reg_data)) begin
-              bge2_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin 
-              bge_not_taken = 1'b1;
-              bge2_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
+            else if(rs2 == chosen_reg_ndc) begin
+              inst_supported = BGE_SWITCH;
+              if($signed(rs1_data) >= $signed(chosen_reg_data)) begin
+                bge2_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin 
+                bge_not_taken = 1'b1;
+                bge2_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
           end
         end
@@ -659,31 +669,33 @@ input[33:0] dbus_rsp_i
           // Checked in target property
           branch_supported = 1'b1;
 
-          if(rs1 == chosen_reg_ndc) begin
-            inst_supported = BLTU_SWITCH;
-            if(chosen_reg_data < rs2_data) begin
-              bltu1_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
+          if(chosen_reg_flag) begin 
+            if(rs1 == chosen_reg_ndc) begin
+              inst_supported = BLTU_SWITCH;
+              if(chosen_reg_data < rs2_data) begin
+                bltu1_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin
+                bltu_not_taken = 1'b1;
+                bltu1_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
-            else begin
-              bltu_not_taken = 1'b1;
-              bltu1_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
-            end
-          end
 
-          else if(rs2 == chosen_reg_ndc) begin
-            inst_supported = BLTU_SWITCH;
-            if(rs1_data < chosen_reg_data) begin
-              bltu2_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin 
-              bltu_not_taken = 1'b1;
-              bltu2_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
+            else if(rs2 == chosen_reg_ndc) begin
+              inst_supported = BLTU_SWITCH;
+              if(rs1_data < chosen_reg_data) begin
+                bltu2_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin 
+                bltu_not_taken = 1'b1;
+                bltu2_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
           end
         end
@@ -696,31 +708,33 @@ input[33:0] dbus_rsp_i
           // Checked in target property
           branch_supported = 1'b1;
 
-          if(rs1 == chosen_reg_ndc) begin
-            inst_supported = BGEU_SWITCH;
-            if(chosen_reg_data >= rs2_data) begin
-              bgeu1_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
+          if(chosen_reg_flag) begin 
+            if(rs1 == chosen_reg_ndc) begin
+              inst_supported = BGEU_SWITCH;
+              if(chosen_reg_data >= rs2_data) begin
+                bgeu1_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin
+                bgeu_not_taken = 1'b1;
+                bgeu1_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
-            else begin
-              bgeu_not_taken = 1'b1;
-              bgeu1_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
-            end
-          end
 
-          else if(rs2 == chosen_reg_ndc) begin
-            inst_supported = BGEU_SWITCH;
-            if(rs1_data >= chosen_reg_data) begin
-              bgeu2_taken = 1'b1;
-              tb_pc_next = dut_pc_gbox + imm32;
-            end
-            else begin 
-              bgeu_not_taken = 1'b1;
-              bgeu2_not_taken = 1'b1;
-              // pc_inc();
-              tb_pc_next = dut_pc_gbox + 4;
+            else if(rs2 == chosen_reg_ndc) begin
+              inst_supported = BGEU_SWITCH;
+              if(rs1_data >= chosen_reg_data) begin
+                bgeu2_taken = 1'b1;
+                tb_pc_next = dut_pc_gbox + imm32;
+              end
+              else begin 
+                bgeu_not_taken = 1'b1;
+                bgeu2_not_taken = 1'b1;
+                // pc_inc();
+                tb_pc_next = dut_pc_gbox + 4;
+              end
             end
           end
         end
@@ -905,12 +919,12 @@ input[33:0] dbus_rsp_i
     |-> 
     dut_next_pc_gbox == (dut_pc_gbox + 4);
   endproperty
-  ast_no_branch_mult_states_pc_DUT_BEQ_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states(beq_not_taken));
-  ast_no_branch_mult_states_pc_DUT_BNE_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states(bne_not_taken));
-  ast_no_branch_mult_states_pc_DUT_BLT_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states(blt_not_taken));
-  ast_no_branch_mult_states_pc_DUT_BGE_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states(bge_not_taken));
-  ast_no_branch_mult_states_pc_DUT_BLTU_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states(bltu_not_taken));
-  ast_no_branch_mult_states_pc_DUT_BGEU_HELP_HIGH_NEW:       assert property(pc_DUT_BEQ_no_branch_mult_states(bgeu_not_taken));
+  ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(beq_not_taken));
+  ast_no_branch_mult_states_pc_DUT_BNE_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(bne_not_taken));
+  ast_no_branch_mult_states_pc_DUT_BLT_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(blt_not_taken));
+  ast_no_branch_mult_states_pc_DUT_BGE_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(bge_not_taken));
+  ast_no_branch_mult_states_pc_DUT_BLTU_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(bltu_not_taken));
+  ast_no_branch_mult_states_pc_DUT_BGEU_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(bgeu_not_taken));
 
 
   // *** FAILS ***
@@ -966,7 +980,7 @@ input[33:0] dbus_rsp_i
   dut_next_pc_gbox == dut_pc_gbox + imm32;
   endproperty
   // PROVEN
-  // ast_next_pc1_DUT_BEQ_HELP_HIGH:       assert property(next_pc1_dut_branch(beq1_taken, beq2_taken));
+  ast_next_pc1_DUT_BEQ_SUBHELP_LV1_HIGH:       assert property(next_pc1_dut_branch(beq1_taken, beq2_taken));
   // ast_next_pc1_DUT_BNE_HELP_HIGH:       assert property(next_pc1_dut_branch(bne1_taken, bne2_taken));
   // ast_next_pc1_DUT_BLT_HELP_HIGH:       assert property(next_pc1_dut_branch(blt1_taken, blt2_taken));
   // ast_next_pc1_DUT_BLTU_HELP_HIGH:       assert property(next_pc1_dut_branch(bltu1_taken, bltu2_taken));
@@ -1004,12 +1018,12 @@ input[33:0] dbus_rsp_i
   endproperty
   // If precondition is only pc_we, then TRAP event already happend and this case won't be considered
   // SOLUTION: pc_we happens AFTER trap event
-  ast_next_pc2_DUT_sstate_BEQ_SUBTARGET_LV1: assert property(next_pc2_dut_sstate_branch(beq1_taken, beq2_taken));
-  ast_next_pc2_DUT_sstate_BNE_HELP_HIGH: assert property(next_pc2_dut_sstate_branch(bne1_taken, bne2_taken));
-  ast_next_pc2_DUT_sstate_BLT_HELP_HIGH: assert property(next_pc2_dut_sstate_branch(blt1_taken, blt2_taken));
-  ast_next_pc2_DUT_sstate_BLTU_HELP_HIGH: assert property(next_pc2_dut_sstate_branch(bltu1_taken, bltu2_taken));
-  ast_next_pc2_DUT_sstate_BGE_HELP_HIGH: assert property(next_pc2_dut_sstate_branch(bge1_taken, bge2_taken));
-  ast_next_pc2_DUT_sstate_BGEU_HELP_HIGH: assert property(next_pc2_dut_sstate_branch(bgeu1_taken, bgeu2_taken));
+  ast_next_pc2_DUT_sstate_BEQ_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(beq1_taken, beq2_taken));
+  ast_next_pc2_DUT_sstate_BNE_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bne1_taken, bne2_taken));
+  ast_next_pc2_DUT_sstate_BLT_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(blt1_taken, blt2_taken));
+  ast_next_pc2_DUT_sstate_BLTU_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bltu1_taken, bltu2_taken));
+  ast_next_pc2_DUT_sstate_BGE_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bge1_taken, bge2_taken));
+  ast_next_pc2_DUT_sstate_BGEU_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bgeu1_taken, bgeu2_taken));
 
   ////////////////////////////////////////////////////////////////////////////////
   // Instr fields HELPERS
@@ -1056,7 +1070,103 @@ input[33:0] dbus_rsp_i
   // PROVEN
   ast_exec_state2_HELP: assert property(exec_state2);
 
+////////////////////////////////////////////////////////////////////////////////
+// Branch decision
+////////////////////////////////////////////////////////////////////////////////
 
+  // Branch decision between DUT and REF must be the same
+  
+  property branch_decision (branch1_taken, branch2_taken);
+    !exception
+    && branch_taken
+    |->
+    (branch1_taken || branch2_taken);
+  endproperty
+  // This won't work because branch taken is high from reset and branch1_taken is low
+
+  // LV2 target
+  property no_branch_decision1 (branch1_taken, branch2_taken);
+    !exception
+    && !branch_taken
+    && exec_state_gbox != EXECUTE
+    |->
+    !(branch1_taken || branch2_taken);
+  endproperty
+  ast_no_branch_decision1_BEQ_SUBHELP_LV1_HIGH: assert property(no_branch_decision1(beq1_taken, beq2_taken));
+
+  property no_branch_decision2 (branch_not_taken, branch_inst);
+    !exception
+    && !branch_taken
+    && branch_inst
+    && chosen_reg_flag
+    && branch_supported && inst_supported
+    && exec_state_gbox != EXECUTE
+    |->
+    branch_not_taken;
+  endproperty
+  ast_no_branch_decision2_BEQ_SUBHELP_LV2_HIGH: assert property(no_branch_decision2(beq_not_taken, beq_inst));
+
+
+  // Reg values cannot be the same cus of the case where previous instr was not supported
+  // In the current instructions which is supported these two will be different because ref model has not updated its pc because previous instr was unsupported
+  // tb_pc == dut_pc_gbox;
+  property dispatch_match;
+    !exception 
+    && pc_we_gbox 
+    && inst_supported 
+    && beq_inst 
+    && chosen_reg_flag 
+    && exec_state_gbox == DISPATCH
+    |-> 
+    tb_pc_next == dut_next_pc_gbox;
+  endproperty
+//  ast_dispatch_match_SUBHELP_LV1_HIGH:  assert property(dispatch_match);
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Lv 2 helpers
+  ////////////////////////////////////////////////////////////////////////////////
+    property branch_taken_state (branch1_taken, branch2_taken);
+      !exception
+      && (branch1_taken || branch2_taken)
+      && exec_state_gbox != TRAP_ENTER
+      |-> 
+      exec_state_gbox inside {DISPATCH, EXECUTE, BRANCH, BRANCHED};
+    endproperty
+    ast_branch_taken_state_BEQ_SUBHELP_LV2_HIGH: assert property(branch_taken_state(beq1_taken, beq2_taken));
+
+    property chosen_reg_data_branch_match1(branch1_taken);
+      !exception 
+      && chosen_reg_flag 
+      && (branch1_taken) |-> 
+      chosen_reg_data == rs1_data;
+    endproperty
+    ast_chosen_reg_data_branch_match1_BEQ_SUBHELP_LV2_HIGH: assert property(chosen_reg_data_branch_match1(beq1_taken));
+
+    property chosen_reg_data_branch_match2(branch2_taken);
+      !exception 
+      && chosen_reg_flag 
+      && (branch2_taken) |-> 
+      chosen_reg_data == rs2_data;
+    endproperty
+    ast_chosen_reg_data_branch_match2_BEQ_SUBHELP_LV2_HIGH: assert property(chosen_reg_data_branch_match1(beq2_taken));
+
+    property chosen_reg_data_no_branch_match1(branch1_not_taken);
+      !exception 
+      && chosen_reg_flag 
+      && (branch1_not_taken) |-> 
+      chosen_reg_data == rs1_data;
+    endproperty
+    ast_chosen_reg_data_match1_BEQ_SUBHELP_LV2_HIGH: assert property(chosen_reg_data_no_branch_match1(beq1_not_taken));
+
+    property chosen_reg_data_no_branch_match2(branch2_not_taken);
+      !exception 
+      && chosen_reg_flag 
+      && (branch2_not_taken) |-> 
+      chosen_reg_data == rs2_data;
+    endproperty
+    ast_chosen_reg_data_match2_BEQ_SUBHELP_LV2_HIGH: assert property(chosen_reg_data_no_branch_match2(beq2_not_taken));
 ////////////////////////////////////////////////////////////////////////////////
 // NDC DATA HELPERS - BEQ TAKEN
 ////////////////////////////////////////////////////////////////////////////////
@@ -1077,12 +1187,18 @@ input[33:0] dbus_rsp_i
   // *HARD TO PROVE* -> PROVEN
   ast_beq2b_ndc_data_HELP:      assert property(!exception && chosen_reg_flag && $rose(beq2_taken) |-> chosen_reg_data == rs2_data);
   // *HARD TO PROVE* -> PROVEN
+  // HOLDS FOR ANY BRANCH TYPE
   ast_beq2c_ndc_data_HELP:      assert property(!exception && chosen_reg_flag && (beq2_taken) |-> chosen_reg_data == rs2_data);
+
+
+
+
 
   ast_beq1a_ndc_data_HELP:      assert property(!exception && $rose(beq1_taken) |-> chosen_reg_data == rs2_data);
   // *HARD TO PROVE* -> PROVEN
   ast_beq1b_ndc_data_HELP:      assert property(!exception && chosen_reg_flag && $rose(beq1_taken) |-> chosen_reg_data == rs1_data);
   // *HARD TO PROVE* -> PROVEN
+  // HOLDS FOR ANY BRANCH TYPE
   ast_beq1c_ndc_data_HELP:      assert property(!exception && chosen_reg_flag && (beq1_taken) |-> chosen_reg_data == rs1_data);
 
   // *HARD TO PROVE* -> PROVEN
@@ -1093,7 +1209,9 @@ input[33:0] dbus_rsp_i
 
   // *HARD TO PROVE* -> PROVEN
   ast_no_beq_rs_data_HELP:      assert property(!exception && chosen_reg_flag && beq_not_taken |-> rs1_data != rs2_data);
+  // HOLDS FOR ANY BRANCH TYPE
   ast_no_beq1_ndc_data_HELP:      assert property(!exception && chosen_reg_flag && beq1_not_taken |-> rs1_data == chosen_reg_data);
+  // HOLDS FOR ANY BRANCH TYPE
   ast_no_beq2_ndc_data_HELP:      assert property(!exception && chosen_reg_flag && beq2_not_taken |-> rs2_data == chosen_reg_data);
 
   ////////////////////////////////////////////////////////////////////////////////

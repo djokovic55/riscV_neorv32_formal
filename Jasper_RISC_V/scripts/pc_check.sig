@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wavelist version="3">
-  <insertion-point-position>7</insertion-point-position>
+  <insertion-point-position>16</insertion-point-position>
   <wave>
     <expr>clk_i</expr>
     <label/>
@@ -17,6 +17,16 @@
     <radix/>
   </wave>
   <wave collapsed="true">
+    <expr>neorv32_cpu_alu_inst.imm_i</expr>
+    <label/>
+    <radix/>
+  </wave>
+  <wave>
+    <expr>chk_cpu.inst_supported</expr>
+    <label/>
+    <radix>chk_cpu.inst_supported</radix>
+  </wave>
+  <wave collapsed="true">
     <expr>chk_cpu.dut_pc_gbox</expr>
     <label/>
     <radix>chk_cpu.dut_pc_gbox</radix>
@@ -25,11 +35,6 @@
     <expr>neorv32_cpu_control_inst.execute_engine.next_pc</expr>
     <label/>
     <radix>chk_cpu.dut_regs_gbox(2)</radix>
-  </wave>
-  <wave collapsed="true">
-    <expr>neorv32_cpu_alu_inst.imm_i</expr>
-    <label/>
-    <radix/>
   </wave>
   <wave collapsed="true">
     <expr>chk_cpu.imm32</expr>
@@ -59,6 +64,16 @@
   </wave>
   <wave>
     <expr>chk_cpu.chosen_reg_flag</expr>
+    <label/>
+    <radix/>
+  </wave>
+  <wave>
+    <expr>chk_cpu.inst_supported</expr>
+    <label/>
+    <radix>chk_cpu.inst_supported</radix>
+  </wave>
+  <wave>
+    <expr>chk_cpu.branch_supported</expr>
     <label/>
     <radix/>
   </wave>
