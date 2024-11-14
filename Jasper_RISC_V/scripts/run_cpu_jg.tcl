@@ -117,13 +117,28 @@ if {$lv1 == 1} {
   ################################################################################
   ### ASSUME NODE
   # CHANGE -> Pick only one assertion -> *SUBTARGET_LV1* is not specific 
-  task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH*} {*SUBHELP_LV1_HIGH*}}
+  # INCREMENT
+  # ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH
+  set lv1_incr_target "{*ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH*}"
+  # BRANCH
+  # ast_next_pc2_DUT_sstate_BEQ_TOPHELP_HIGH
+
+  # BRANCH
+  # task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*next_pc2_DUT_sstate_BEQ*} {*SUBHELP_LV1_HIGH*}}
+  # INCREMENT
+  # task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH*} {*SUBHELP_LV1_HIGH*}}
+  task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv1_incr_target {*SUBHELP_LV1_HIGH*}"
 
   assert -set_helper *SUBHELP_LV1_HIGH*
   assert -mark_proven *SUBHELP_LV1_HIGH*
 
-  prove -property *ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH* -sst 6 -set helper 
-  prove -property *ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH* -with_helpers -bg
+  # BRANCH
+  # prove -property *next_pc2_DUT_sstate_BEQ* -sst 6 -set helper 
+  # prove -property *next_pc2_DUT_sstate_BEQ* -with_helpers -bg
+
+  # INCREMENT
+  prove -property $lv1_incr_target -sst 6 -set helper 
+  prove -property $lv1_incr_target -with_helpers -bg
 
   ### GUARANTEE NODE
   # Some of current level subhelpers will be hard to prove and they will become the target for the next sub level
@@ -137,16 +152,18 @@ if {$lv2 == 1} {
   ################################################################################
   ### ASSUME NODE
   # CHANGE -> Pick only one assertin -> *SUBTARGET_LV1* is not specific 
-  set lv2_target "no_branch_decision"
-  task -create subtarget_lv2_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*no_branch_decision1*} {*SUBHELP_LV2_HIGH*}}
+  # set lv2_target "{*no_branch_decision*}"
+  set lv2_target "{*ast_dut_B_tb_B_BEQ_SUBHELP_LV1_HIGH*}"
+  task -create subtarget_lv2_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv2_target {*SUBHELP_LV2_HIGH*}"
 
   assert -set_helper *SUBHELP_LV2_HIGH*
   assert -mark_proven *SUBHELP_LV2_HIGH*
 
   # prove -property *SUBTARGET_LV2* -sst 6 -set helper 
   # prove -property *SUBTARGET_LV2* -with_helpers -bg
-  prove -property *no_branch_decision1* -sst 6 -set helper 
-  prove -property *no_branch_decision1* -with_helpers -bg
+
+  prove -property $lv2_target -sst 6 -set helper 
+  prove -property $lv2_target -with_helpers -bg
 
   ### GUARANTEE NODE
   # Some of current level subhelpers will be hard to prove and they will become the target for the next sub level

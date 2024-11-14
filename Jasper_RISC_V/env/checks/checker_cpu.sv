@@ -888,28 +888,12 @@ input[33:0] dbus_rsp_i
 // SST HELPERS for pc main BEQ check with CASE SPLIT (signed imm32 and chosen_reg_ndc == rs1)
 ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-// PC VALUE HELPERS
-////////////////////////////////////////////////////////////////////////////////
-
-  property pc_BEQ_no_branch;
-    !exception && 
-    pc_we_gbox && 
-    (inst_supported && beq_inst) && 
-    chosen_reg_flag && 
-    !branch_taken 
-    |-> 
-    dut_next_pc_gbox == (dut_pc_gbox + 4);
-  endproperty
-  // PROVEN - HARD TO PROVE IN LAST ITERATION
-  // REMOVE?
-  ast_pc_BEQ_no_branch_HELP:            assert property(pc_BEQ_no_branch);
-
   ////////////////////////////////////////////////////////////////////////////////
   // BEQ NOT TAKEN
   ////////////////////////////////////////////////////////////////////////////////
   
   // SUBTARGET
+  // MAIN TOP HELPER - STANDARD INCREMENT
   property pc_DUT_BEQ_no_branch_mult_states(branch_not_taken);
     !exception && 
     (exec_state_gbox == DISPATCH || exec_state_gbox == BRANCH) && 
@@ -926,50 +910,9 @@ input[33:0] dbus_rsp_i
   ast_no_branch_mult_states_pc_DUT_BLTU_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(bltu_not_taken));
   ast_no_branch_mult_states_pc_DUT_BGEU_TOPHELP_HIGH:       assert property(pc_DUT_BEQ_no_branch_mult_states(bgeu_not_taken));
 
-
-  // *** FAILS ***
-  // property pc_TB_BEQ_no_branch_mult_states;
-  //   !exception && 
-  //   (exec_state_gbox == DISPATCH || exec_state_gbox == BRANCH) && 
-  //   (inst_supported && beq_inst) && 
-  //   chosen_reg_flag && 
-  //   beq_not_taken
-  //   |-> 
-  //   tb_pc_next == (tb_pc + 4);
-  // endproperty
-  // ast_pc_TB_BEQ_no_branch_mult_states_HELP_HIGH_NEW:       assert property(pc_TB_BEQ_no_branch_mult_states);
-
   ////////////////////////////////////////////////////////////////////////////////
   // BEQ TAKEN
   ////////////////////////////////////////////////////////////////////////////////
-
-  property next_pc1_TB_branch(branch1_taken, branch2_taken);
-  (branch1_taken || branch2_taken)
-  && ((exec_state_gbox == BRANCH) || (exec_state_gbox == BRANCHED))
-  |->
-  tb_pc_next == dut_pc_gbox + imm32;
-  endproperty
-  // PROVEN
-  // ast_next_pc1_TB_BEQ_HELP_HIGH:        assert property(next_pc1_TB_branch(beq1_taken, beq2_taken));
-  // ast_next_pc1_TB_BNE_HELP_HIGH:        assert property(next_pc1_TB_branch(bne1_taken, bne2_taken));
-  // ast_next_pc1_TB_BLT_HELP_HIGH:        assert property(next_pc1_TB_branch(blt1_taken, blt2_taken));
-  // ast_next_pc1_TB_BLTU_HELP_HIGH:        assert property(next_pc1_TB_branch(bltu1_taken, bltu2_taken));
-  // ast_next_pc1_TB_BGE_HELP_HIGH:        assert property(next_pc1_TB_branch(bge1_taken, bge2_taken));
-  // ast_next_pc1_TB_BGEU_HELP_HIGH:        assert property(next_pc1_TB_branch(bgeu1_taken, bgeu2_taken));
-
-  property next_pc2_tb_branch(branch1_taken, branch2_taken);
-  (branch1_taken|| branch2_taken)
-  && (exec_state_gbox == DISPATCH)
-  |->
-  tb_pc_next == dut_pc_gbox + imm32;
-  endproperty
-  // PROVEN
-  // ast_next_pc2_TB_BEQ_HELP_HIGH:        assert property(next_pc2_tb_branch(beq1_taken, beq2_taken));
-  // ast_next_pc2_TB_BNE_HELP_HIGH:        assert property(next_pc2_tb_branch(bne1_taken, bne2_taken));
-  // ast_next_pc2_TB_BLT_HELP_HIGH:        assert property(next_pc2_tb_branch(blt1_taken, blt2_taken));
-  // ast_next_pc2_TB_BLTU_HELP_HIGH:        assert property(next_pc2_tb_branch(bltu1_taken, bltu2_taken));
-  // ast_next_pc2_TB_BGE_HELP_HIGH:        assert property(next_pc2_tb_branch(bge1_taken, bge2_taken));
-  // ast_next_pc2_TB_BGEU_HELP_HIGH:        assert property(next_pc2_tb_branch(bgeu1_taken, bgeu2_taken));
 
   property next_pc1_dut_branch(branch1_taken, branch2_taken);
   (branch1_taken || branch2_taken)
@@ -980,6 +923,7 @@ input[33:0] dbus_rsp_i
   dut_next_pc_gbox == dut_pc_gbox + imm32;
   endproperty
   // PROVEN
+  // 
   ast_next_pc1_DUT_BEQ_SUBHELP_LV1_HIGH:       assert property(next_pc1_dut_branch(beq1_taken, beq2_taken));
   // ast_next_pc1_DUT_BNE_HELP_HIGH:       assert property(next_pc1_dut_branch(bne1_taken, bne2_taken));
   // ast_next_pc1_DUT_BLT_HELP_HIGH:       assert property(next_pc1_dut_branch(blt1_taken, blt2_taken));
@@ -1008,6 +952,7 @@ input[33:0] dbus_rsp_i
   // single state as precondtion (pc_we last for one cycle)
 
   // SUBTARGET
+  // MAIN TOP HELPER - BRANCH
   property next_pc2_dut_sstate_branch(branch1_taken, branch2_taken);
     (branch1_taken || branch2_taken)
     && pc_we_gbox  
@@ -1016,8 +961,7 @@ input[33:0] dbus_rsp_i
     |->
     dut_next_pc_gbox == dut_pc_gbox + imm32;
   endproperty
-  // If precondition is only pc_we, then TRAP event already happend and this case won't be considered
-  // SOLUTION: pc_we happens AFTER trap event
+
   ast_next_pc2_DUT_sstate_BEQ_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(beq1_taken, beq2_taken));
   ast_next_pc2_DUT_sstate_BNE_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bne1_taken, bne2_taken));
   ast_next_pc2_DUT_sstate_BLT_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(blt1_taken, blt2_taken));
@@ -1025,22 +969,33 @@ input[33:0] dbus_rsp_i
   ast_next_pc2_DUT_sstate_BGE_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bge1_taken, bge2_taken));
   ast_next_pc2_DUT_sstate_BGEU_TOPHELP_HIGH: assert property(next_pc2_dut_sstate_branch(bgeu1_taken, bgeu2_taken));
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // Instr fields HELPERS
-  ////////////////////////////////////////////////////////////////////////////////
 
-  property next_ir_opcode_value;
-    next_ir_gbox[6:0] == '0 || 
-    next_ir_gbox[6:0] == OPCODE_ALUR || 
-    next_ir_gbox[6:0] == OPCODE_ALUR || 
-    next_ir_gbox[6:0] == OPCODE_ALUI || 
-    next_ir_gbox[6:0] == OPCODE_JAL || 
-    next_ir_gbox[6:0] == OPCODE_JALR || 
-    next_ir_gbox[6:0] == OPCODE_BRANCH;
-  endproperty
-  // PROVEN -> FAILS WHEN CONSTRAINTS WERE REMOVED
-  // CEX: load instruction can happen
-  // ast_next_ir_opcode_value_HELP_HIGH:   assert property(next_ir_opcode_value);
+    // Case split which helps, in which amount, is still fuzzy
+    property next_pc2_dut_sstate_branch_CS1(branch1_taken, branch2_taken);
+      (branch1_taken || branch2_taken)
+      && pc_we_gbox  
+      && !exception
+      && chosen_reg_flag
+      && dut_next_pc_gbox[31:16] == '0
+      && dut_pc_gbox[31:16] == '0
+      && imm32[31:16] == '0
+      |->
+      dut_next_pc_gbox == dut_pc_gbox + imm32;
+    endproperty
+    // ast_next_pc2_DUT_sstate_CS1_BEQ_SUBHELP_LV1_HIGH: assert property(next_pc2_dut_sstate_branch_CS1(beq1_taken, beq2_taken));
+
+    property next_pc2_dut_sstate_branch_CS2(branch1_taken, branch2_taken);
+      (branch1_taken || branch2_taken)
+      && pc_we_gbox  
+      && !exception
+      && chosen_reg_flag
+      && dut_next_pc_gbox[15:0] == '0
+      && dut_pc_gbox[15:0] == '0
+      && imm32[15:0] == '0
+      |->
+      dut_next_pc_gbox == dut_pc_gbox + imm32;
+    endproperty
+    // ast_next_pc2_DUT_sstate_CS2_BEQ_SUBHELP_LV1_HIGH: assert property(next_pc2_dut_sstate_branch_CS2(beq1_taken, beq2_taken));
 
 ////////////////////////////////////////////////////////////////////////////////
 // STATE HELPERS
@@ -1057,33 +1012,11 @@ input[33:0] dbus_rsp_i
   // ast_exec_state1_HELP:         assert property(exec_state1);
   ast_exec_state1_SUBHELP_LV1_HIGH:         assert property(exec_state1);
 
-  property exec_state2;
-  beq_inst
-  && !exception
-  && (($changed(exec_state_gbox) && exec_state_gbox == BRANCHED) 
-  // || ($changed(exec_state_gbox) && exec_state_gbox == DISPATCH)
-  )
-  |->
-  $past(exec_state_gbox == BRANCH);
-  endproperty
-
-  // PROVEN
-  ast_exec_state2_HELP: assert property(exec_state2);
-
 ////////////////////////////////////////////////////////////////////////////////
 // Branch decision
 ////////////////////////////////////////////////////////////////////////////////
 
-  // Branch decision between DUT and REF must be the same
-  
-  property branch_decision (branch1_taken, branch2_taken);
-    !exception
-    && branch_taken
-    |->
-    (branch1_taken || branch2_taken);
-  endproperty
-  // This won't work because branch taken is high from reset and branch1_taken is low
-
+  // PART 1 when branch is taken
   // LV2 target
   property no_branch_decision1 (branch1_taken, branch2_taken);
     !exception
@@ -1092,7 +1025,7 @@ input[33:0] dbus_rsp_i
     |->
     !(branch1_taken || branch2_taken);
   endproperty
-  ast_no_branch_decision1_BEQ_SUBHELP_LV1_HIGH: assert property(no_branch_decision1(beq1_taken, beq2_taken));
+  // ast_no_branch_decision1_BEQ_SUBHELP_LV1_HIGH: assert property(no_branch_decision1(beq1_taken, beq2_taken));
 
   property no_branch_decision2 (branch_not_taken, branch_inst);
     !exception
@@ -1105,25 +1038,31 @@ input[33:0] dbus_rsp_i
     branch_not_taken;
   endproperty
   ast_no_branch_decision2_BEQ_SUBHELP_LV2_HIGH: assert property(no_branch_decision2(beq_not_taken, beq_inst));
+  ////////////////////////////////////////////////////////////////////////////////
+  // PART 2 - STANDARD INCREMENT
+  ////////////////////////////////////////////////////////////////////////////////
+    // LV 2 target
+    property branch_decision_dut_B_tb_NNB (branch_not_taken, branch_inst);
+      !exception
+      && branch_taken
+      && branch_inst
+      && exec_state_gbox != EXECUTE
+      && branch_supported && inst_supported
+      |->
+      !branch_not_taken;
+    endproperty
+    // ast_dut_B_tb_NNB_BEQ_SUBHELP_LV1_HIGH: assert property(branch_decision_dut_B_tb_NNB (beq_not_taken, beq_inst));
 
-
-  // Reg values cannot be the same cus of the case where previous instr was not supported
-  // In the current instructions which is supported these two will be different because ref model has not updated its pc because previous instr was unsupported
-  // tb_pc == dut_pc_gbox;
-  property dispatch_match;
-    !exception 
-    && pc_we_gbox 
-    && inst_supported 
-    && beq_inst 
-    && chosen_reg_flag 
-    && exec_state_gbox == DISPATCH
-    |-> 
-    tb_pc_next == dut_next_pc_gbox;
-  endproperty
-//  ast_dispatch_match_SUBHELP_LV1_HIGH:  assert property(dispatch_match);
-
-
-
+    property branch_decision_dut_B_tb_B (branch1_taken, branch2_taken, branch_inst);
+      !exception
+      && branch_taken
+      && branch_inst
+      && exec_state_gbox != EXECUTE
+      && branch_supported && inst_supported
+      |->
+      (branch1_taken || branch2_taken);
+    endproperty
+    ast_dut_B_tb_B_BEQ_SUBHELP_LV1_HIGH: assert property(branch_decision_dut_B_tb_B (beq1_taken, beq2_taken, beq_inst));
   ////////////////////////////////////////////////////////////////////////////////
   // Lv 2 helpers
   ////////////////////////////////////////////////////////////////////////////////
