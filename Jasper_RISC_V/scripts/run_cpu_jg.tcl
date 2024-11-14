@@ -79,8 +79,8 @@ check_assumptions
 
 
 set target 0
-set lv1 1
-set lv2 0
+set lv1 0
+set lv2 1
 ################################################################################
 # SST on top target
 ################################################################################
@@ -116,34 +116,20 @@ if {$lv1 == 1} {
   # SST on LV1 subtargets
   ################################################################################
   ### ASSUME NODE
-  # CHANGE -> Pick only one assertion -> *SUBTARGET_LV1* is not specific 
-  # INCREMENT
-  # ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH
-  set lv1_incr_target "{*ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH*}"
-  # BRANCH
-  # ast_next_pc2_DUT_sstate_BEQ_TOPHELP_HIGH
+  set lv1_target "{*next_pc_branch_BEQ*}"
 
-  # BRANCH
-  # task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*next_pc2_DUT_sstate_BEQ*} {*SUBHELP_LV1_HIGH*}}
-  # INCREMENT
-  # task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*ast_no_branch_mult_states_pc_DUT_BEQ_TOPHELP_HIGH*} {*SUBHELP_LV1_HIGH*}}
-  task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv1_incr_target {*SUBHELP_LV1_HIGH*}"
+  task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv1_target {*LV1_HELP_HIGH*}"
 
-  assert -set_helper *SUBHELP_LV1_HIGH*
-  assert -mark_proven *SUBHELP_LV1_HIGH*
+  assert -set_helper *LV1_HELP_HIGH*
+  assert -mark_proven *LV1_HELP_HIGH*
 
-  # BRANCH
-  # prove -property *next_pc2_DUT_sstate_BEQ* -sst 6 -set helper 
-  # prove -property *next_pc2_DUT_sstate_BEQ* -with_helpers -bg
-
-  # INCREMENT
-  prove -property $lv1_incr_target -sst 6 -set helper 
-  prove -property $lv1_incr_target -with_helpers -bg
+  prove -property $lv1_target -sst 6 -set helper 
+  prove -property $lv1_target -with_helpers -bg
 
   ### GUARANTEE NODE
   # Some of current level subhelpers will be hard to prove and they will become the target for the next sub level
-  task -create subtarget_lv1_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*SUBHELP_LV1_HIGH*}}
-  prove -bg -task {subtarget_lv1_G}
+  task -create subtarget_lv1_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*LV1_HELP_HIGH*}}
+  # prove -bg -task {subtarget_lv1_G}
 }
 
 if {$lv2 == 1} {
@@ -151,22 +137,17 @@ if {$lv2 == 1} {
   # SST on LV2 subtargets
   ################################################################################
   ### ASSUME NODE
-  # CHANGE -> Pick only one assertin -> *SUBTARGET_LV1* is not specific 
-  # set lv2_target "{*no_branch_decision*}"
-  set lv2_target "{*ast_dut_B_tb_B_BEQ_SUBHELP_LV1_HIGH*}"
-  task -create subtarget_lv2_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv2_target {*SUBHELP_LV2_HIGH*}"
+  set lv2_target "{*branch_decision*}"
+  task -create subtarget_lv2_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv2_target {*LV2_HELP_HIGH*}"
 
-  assert -set_helper *SUBHELP_LV2_HIGH*
-  assert -mark_proven *SUBHELP_LV2_HIGH*
-
-  # prove -property *SUBTARGET_LV2* -sst 6 -set helper 
-  # prove -property *SUBTARGET_LV2* -with_helpers -bg
+  assert -set_helper *LV2_HELP_HIGH*
+  assert -mark_proven *LV2_HELP_HIGH*
 
   prove -property $lv2_target -sst 6 -set helper 
   prove -property $lv2_target -with_helpers -bg
 
   ### GUARANTEE NODE
   # Some of current level subhelpers will be hard to prove and they will become the target for the next sub level
-  task -create subtarget_lv2_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*SUBHELP_LV2_HIGH*}}
+  task -create subtarget_lv2_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*LV2_HELP_HIGH*}}
   prove -bg -task {subtarget_lv2_G}
 }
