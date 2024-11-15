@@ -80,7 +80,7 @@ check_assumptions
 
 set target 0
 set lv1 0
-set lv2 1
+set lv2 0
 ################################################################################
 # SST on top target
 ################################################################################
@@ -90,22 +90,15 @@ if {$target == 1} {
 
   ### Mark all assertions with sufix HELP_HIGH as proven helpers -> 
   ### Essentially used as assumptions to reduce the state space during the proof of the target property
-  assert -set_helper *HELP_HIGH*
-  assert -mark_proven *HELP_HIGH*
+  assert -set_helper *MAIN_HELP_HIGH*
+  assert -mark_proven *MAIN_HELP_HIGH*
 
   # Prove the target with helpers used as an assumptions (helpers marked as proven) -> ASSUME NODE
   prove -property *TARGET* -sst 6 -set helper 
   prove -property *TARGET* -with_helpers -bg
 
-  ### Guarantee node where new helpers should be proven first -> GUARANTEE NODE
-  # task -create pc_BEQ_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH_NEW*}
-  # prove -bg -task {pc_BEQ_G}
-
-  # task -create target_sanity_check -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*TARGET}
-  # prove -bg -task {target_sanity_check}
-
   # It is better to prove all helpers together 
-  task -create main_target_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*HELP_HIGH*}
+  task -create main_target_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {*MAIN_HELP_HIGH*}
   # assert -enable {*BNE_HELP*}
   prove -bg -task {main_target_G}
 }
@@ -116,7 +109,7 @@ if {$lv1 == 1} {
   # SST on LV1 subtargets
   ################################################################################
   ### ASSUME NODE
-  set lv1_target "{*next_pc_branch_BEQ*}"
+  set lv1_target "{*next_pc_branch_BEQ*} {*next_pc_increment_BEQ*}"
 
   task -create subtarget_lv1_A -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy "$lv1_target {*LV1_HELP_HIGH*}"
 
@@ -151,3 +144,48 @@ if {$lv2 == 1} {
   task -create subtarget_lv2_G -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy {{*LV2_HELP_HIGH*}}
   prove -bg -task {subtarget_lv2_G}
 }
+
+task -create PS_SETUP -set -source_task <embedded> -copy_stopats -copy_ratings -copy_abstractions all -copy_assumes -copy_assert -set 
+
+proc proof_structure_proc {} {
+
+  # Root node
+  proof_structure -init ROOT -from PS_SETUP -copy_all
+
+  # In proof structure feature all helpers should be used in top guarantee node 
+  # From there some of them will become targets or remain helpers on sublevels
+
+  # Top node
+  set main_target "{*TARGET*}"
+  set main_helpers "{*MAIN_HELP_HIGH*} {*LV1_HELP_HIGH*} {*LV2_HELP_HIGH*}"
+  proof_structure -create assume_guarantee \
+                  -from ROOT \
+                  -op_name MAIN \
+                  -imp_name {MAIN.G MAIN.A} \
+                  -property [list ${main_helpers} $main_target]
+
+  # Lv1 node
+  set lv1_target "{*next_pc_branch_BEQ*} {*next_pc_increment_BEQ*}"
+  set lv1_helpers "{*LV1_HELP_HIGH*} {*LV2_HELP_HIGH*}"
+  proof_structure -create assume_guarantee \
+                  -from MAIN.G \
+                  -op_name LV1 \
+                  -imp_name {LV1.G LV1.A} \
+                  -property [list ${lv1_helpers} $lv1_target]
+
+  # Lv2 node
+  set lv2_target "{*branch_decision*LV1*}"
+  set lv2_helpers "{*LV2_HELP_HIGH*}"
+  proof_structure -create assume_guarantee \
+                  -from LV1.G \
+                  -op_name LV2 \
+                  -imp_name {LV2.G LV2.A} \
+                  -property [list ${lv2_helpers} $lv2_target]
+
+  prove -task MAIN.A -bg
+  prove -task LV1.A -bg
+  prove -task LV2.A -bg
+  prove -task LV2.G -bg
+}
+
+proof_structure_proc
