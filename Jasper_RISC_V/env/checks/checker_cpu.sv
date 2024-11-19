@@ -813,10 +813,10 @@ input[33:0] dbus_rsp_i
   ast_pc_main_BEQ:                      assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |=> tb_pc == dut_pc_gbox);
 
   //Check one cycle earlier
+  ast_next_pc_main_BEQ:                 assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
   ///////////////
   // TARGET
   ///////////////
-  ast_next_pc_main_BEQ:                 assert property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
   ast_next_pc_main_BRANCH_TARGET:      assert property(!exception && pc_we_gbox && (inst_supported && branch_supported) && chosen_reg_flag |-> tb_pc_next == dut_next_pc_gbox);
 
   cov_BEQ1:                             cover property(!exception && pc_we_gbox && (inst_supported && beq_inst) && chosen_reg_flag && beq1_taken);
@@ -882,7 +882,6 @@ input[33:0] dbus_rsp_i
 
   ////////////////////////////////////////////////////////////////////////////////
   // LV1 HELPERS - TARGETs are main helpers
-  ////////////////////////////////////////////////////////////////////////////////
     property next_pc_branch_BRANCHED(branch1_taken, branch2_taken);
     (branch1_taken || branch2_taken)
     && (exec_state_gbox == BRANCHED)
@@ -892,6 +891,11 @@ input[33:0] dbus_rsp_i
     dut_next_pc_gbox == dut_pc_gbox + imm32;
     endproperty
     ast_next_pc_branch_BRANCHED_BEQ_LV1_HELP_HIGH:       assert property(next_pc_branch_BRANCHED(beq1_taken, beq2_taken));
+    ast_next_pc_branch_BRANCHED_BNE_LV1_HELP_HIGH:       assert property(next_pc_branch_BRANCHED(bne1_taken, bne2_taken));
+    ast_next_pc_branch_BRANCHED_BLT_LV1_HELP_HIGH:       assert property(next_pc_branch_BRANCHED(blt1_taken, blt2_taken));
+    ast_next_pc_branch_BRANCHED_BLTU_LV1_HELP_HIGH:       assert property(next_pc_branch_BRANCHED(bltu1_taken, bltu2_taken));
+    ast_next_pc_branch_BRANCHED_BGE_LV1_HELP_HIGH:       assert property(next_pc_branch_BRANCHED(bge1_taken, bge2_taken));
+    ast_next_pc_branch_BRANCHED_bgeu_LV1_HELP_HIGH:       assert property(next_pc_branch_BRANCHED(bgeu1_taken, bgeu2_taken));
     // ast_next_pc1_DUT_BNE_HELP_HIGH:       assert property(next_pc1_dut_branch(bne1_taken, bne2_taken));
     // ast_next_pc1_DUT_BLT_HELP_HIGH:       assert property(next_pc1_dut_branch(blt1_taken, blt2_taken));
     // ast_next_pc1_DUT_BLTU_HELP_HIGH:       assert property(next_pc1_dut_branch(bltu1_taken, bltu2_taken));
@@ -907,6 +911,12 @@ input[33:0] dbus_rsp_i
       exec_state_gbox inside {DISPATCH, EXECUTE, BRANCH, BRANCHED};
     endproperty
     ast_exec_state_BEQ_LV1_HELP_HIGH:         assert property(exec_state(beq_inst));
+    ast_exec_state_BNE_LV1_HELP_HIGH:         assert property(exec_state(bne_inst));
+    ast_exec_state_BLT_LV1_HELP_HIGH:         assert property(exec_state(blt_inst));
+    ast_exec_state_BLTU_LV1_HELP_HIGH:         assert property(exec_state(bltu_inst));
+    ast_exec_state_BGE_LV1_HELP_HIGH:         assert property(exec_state(bge_inst));
+    ast_exec_state_BGEU_LV1_HELP_HIGH:         assert property(exec_state(bgeu_inst));
+
 
     property no_branch_decision (branch1_taken, branch2_taken);
       !exception
@@ -916,6 +926,12 @@ input[33:0] dbus_rsp_i
       !(branch1_taken || branch2_taken);
     endproperty
     ast_no_branch_decision_BEQ_LV1_HELP_HIGH: assert property(no_branch_decision(beq1_taken, beq2_taken));
+    ast_no_branch_decision_BNE_LV1_HELP_HIGH: assert property(no_branch_decision(bne1_taken, bne2_taken));
+    ast_no_branch_decision_BLT_LV1_HELP_HIGH: assert property(no_branch_decision(blt1_taken, blt2_taken));
+    ast_no_branch_decision_BLTU_LV1_HELP_HIGH: assert property(no_branch_decision(bltu1_taken, bltu2_taken));
+    ast_no_branch_decision_BGE_LV1_HELP_HIGH: assert property(no_branch_decision(bge1_taken, bge2_taken));
+    ast_no_branch_decision_BGEU_LV1_HELP_HIGH: assert property(no_branch_decision(bgeu1_taken, bgeu2_taken));
+
 
 
     property branch_decision(branch1_taken, branch2_taken, branch_inst);
@@ -928,10 +944,14 @@ input[33:0] dbus_rsp_i
       (branch1_taken || branch2_taken);
     endproperty
     ast_branch_decision_BEQ_LV1_HELP_HIGH: assert property(branch_decision(beq1_taken, beq2_taken, beq_inst));
+    ast_branch_decision_BNE_LV1_HELP_HIGH: assert property(branch_decision(bne1_taken, bne2_taken, bne_inst));
+    ast_branch_decision_BLT_LV1_HELP_HIGH: assert property(branch_decision(blt1_taken, blt2_taken, blt_inst));
+    ast_branch_decision_BLTU_LV1_HELP_HIGH: assert property(branch_decision(bltu1_taken, bltu2_taken, bltu_inst));
+    ast_branch_decision_BGE_LV1_HELP_HIGH: assert property(branch_decision(bge1_taken, bge2_taken, bge_inst));
+    ast_branch_decision_BGEU_LV1_HELP_HIGH: assert property(branch_decision(bgeu1_taken, bgeu2_taken, bgeu_inst));
 
   ////////////////////////////////////////////////////////////////////////////////
   // Lv 2 helpers
-  ////////////////////////////////////////////////////////////////////////////////
     property no_branch_decision_subhelp (branch_not_taken, branch_inst);
       !exception
       && !branch_taken
@@ -943,6 +963,11 @@ input[33:0] dbus_rsp_i
       branch_not_taken;
     endproperty
     ast_no_branch_decision_subhelp_BEQ_LV2_HELP_HIGH: assert property(no_branch_decision_subhelp(beq_not_taken, beq_inst));
+    ast_no_branch_decision_subhelp_BNE_LV2_HELP_HIGH: assert property(no_branch_decision_subhelp(bne_not_taken, bne_inst));
+    ast_no_branch_decision_subhelp_BLT_LV2_HELP_HIGH: assert property(no_branch_decision_subhelp(blt_not_taken, blt_inst));
+    ast_no_branch_decision_subhelp_BLTU_LV2_HELP_HIGH: assert property(no_branch_decision_subhelp(bltu_not_taken, bltu_inst));
+    ast_no_branch_decision_subhelp_BGE_LV2_HELP_HIGH: assert property(no_branch_decision_subhelp(bge_not_taken, bge_inst));
+    ast_no_branch_decision_subhelp_BGEU_LV2_HELP_HIGH: assert property(no_branch_decision_subhelp(bgeu_not_taken, bgeu_inst));
 
     property branch_taken_state (branch1_taken, branch2_taken);
       !exception
@@ -952,6 +977,11 @@ input[33:0] dbus_rsp_i
       exec_state_gbox inside {DISPATCH, EXECUTE, BRANCH, BRANCHED};
     endproperty
     ast_branch_taken_state_BEQ_LV2_HELP_HIGH: assert property(branch_taken_state(beq1_taken, beq2_taken));
+    ast_branch_taken_state_BNE_LV2_HELP_HIGH: assert property(branch_taken_state(bne1_taken, bne2_taken));
+    ast_branch_taken_state_BLT_LV2_HELP_HIGH: assert property(branch_taken_state(blt1_taken, blt2_taken));
+    ast_branch_taken_state_BLTU_LV2_HELP_HIGH: assert property(branch_taken_state(bltu1_taken, bltu2_taken));
+    ast_branch_taken_state_BGE_LV2_HELP_HIGH: assert property(branch_taken_state(bge1_taken, bge2_taken));
+    ast_branch_taken_state_BGEU_LV2_HELP_HIGH: assert property(branch_taken_state(bgeu1_taken, bgeu2_taken));
 
     property chosen_reg_data_branch_match1(branch1_taken);
       !exception 
@@ -960,6 +990,11 @@ input[33:0] dbus_rsp_i
       chosen_reg_data == rs1_data;
     endproperty
     ast_chosen_reg_data_branch_match1_BEQ_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(beq1_taken));
+    ast_chosen_reg_data_branch_match1_BNE_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(bne1_taken));
+    ast_chosen_reg_data_branch_match1_BLT_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(blt1_taken));
+    ast_chosen_reg_data_branch_match1_BLTU_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(bltu1_taken));
+    ast_chosen_reg_data_branch_match1_BGE_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(bge1_taken));
+    ast_chosen_reg_data_branch_match1_BGEU_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(bgeu1_taken));
 
     property chosen_reg_data_branch_match2(branch2_taken);
       !exception 
@@ -967,7 +1002,12 @@ input[33:0] dbus_rsp_i
       && (branch2_taken) |-> 
       chosen_reg_data == rs2_data;
     endproperty
-    ast_chosen_reg_data_branch_match2_BEQ_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match1(beq2_taken));
+    ast_chosen_reg_data_branch_match2_BEQ_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match2(beq2_taken));
+    ast_chosen_reg_data_branch_match2_BNE_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match2(bne2_taken));
+    ast_chosen_reg_data_branch_match2_BLT_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match2(blt2_taken));
+    ast_chosen_reg_data_branch_match2_BLTU_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match2(bltu2_taken));
+    ast_chosen_reg_data_branch_match2_BGE_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match2(bge2_taken));
+    ast_chosen_reg_data_branch_match2_BGEU_LV2_HELP_HIGH: assert property(chosen_reg_data_branch_match2(bgeu2_taken));
 
     property chosen_reg_data_no_branch_match1(branch1_not_taken);
       !exception 
@@ -976,6 +1016,11 @@ input[33:0] dbus_rsp_i
       chosen_reg_data == rs1_data;
     endproperty
     ast_chosen_reg_data_match1_BEQ_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match1(beq1_not_taken));
+    ast_chosen_reg_data_match1_BNE_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match1(bne1_not_taken));
+    ast_chosen_reg_data_match1_BLT_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match1(blt1_not_taken));
+    ast_chosen_reg_data_match1_BLTU_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match1(bltu1_not_taken));
+    ast_chosen_reg_data_match1_BGE_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match1(bge1_not_taken));
+    ast_chosen_reg_data_match1_BGEU_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match1(bgeu1_not_taken));
 
     property chosen_reg_data_no_branch_match2(branch2_not_taken);
       !exception 
@@ -984,6 +1029,11 @@ input[33:0] dbus_rsp_i
       chosen_reg_data == rs2_data;
     endproperty
     ast_chosen_reg_data_match2_BEQ_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match2(beq2_not_taken));
+    ast_chosen_reg_data_match2_BNE_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match2(bne2_not_taken));
+    ast_chosen_reg_data_match2_BLT_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match2(blt2_not_taken));
+    ast_chosen_reg_data_match2_BLTU_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match2(bltu2_not_taken));
+    ast_chosen_reg_data_match2_BGE_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match2(bge2_not_taken));
+    ast_chosen_reg_data_match2_BGEU_LV2_HELP_HIGH: assert property(chosen_reg_data_no_branch_match2(bgeu2_not_taken));
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRAINTS
