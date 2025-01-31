@@ -7,13 +7,13 @@ set proj_dir "/home/aleksadj/Desktop/RISC_V_PROJECT"
 ## ----------------- ANALYZE COMMANDS ------------------ ##
 ## -------------- To Analyze VHDL Files ---------------- ##
 
-analyze -vhdl -lib neorv32 -f $proj_dir/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_soc.f
-analyze -vhdl -f $proj_dir/RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_soc.f
+analyze -vhdl -lib neorv32 -f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_soc.f
+analyze -vhdl -f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_soc.f
 
 ## --------------- To Analyze SV Files ----------------- ##
 
-analyze -sv $proj_dir/Jasper_RISC_V/env/checks/checker_top.sv
-analyze -sv $proj_dir/Jasper_RISC_V/env/top_bind.sv
+analyze -sv Jasper_RISC_V/env/checks/checker_top.sv
+analyze -sv Jasper_RISC_V/env/top_bind.sv
 
 
 ## --------------- ELABORATION COMMANDS ---------------- ##
