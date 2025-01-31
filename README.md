@@ -12,8 +12,7 @@ This repository contains the formal verification environment for the NEORV32 RIS
 ## Run Project
 1. Clone repository
 2. Run make command
-3. See [script description](.Jasper_RISC_V/scripts/script_desc.md)
-
+3. See [script description](Jasper_RISC_V/scripts/script_desc.md)
 ## Implementation idea
 
 Any bug that may exist in the system will ultimately affect the **program counter (PC)**. Since the PC value is determined by branch instructions—directly influenced by the comparison between source registers—and register values depend on instructions that modify them, verifying the PC alone is sufficient to detect bugs across the entire system.  
@@ -73,11 +72,11 @@ Each level consists of:
 #### **Results and Future Work**  
 - The **helper properties** were derived using the **SST method** and structured into a **tree-like hierarchy** with JasperGold’s **proof structure feature**.  
 
-![Proof Structure](.Jasper_RISC_V/docs/ps.png)
+![Proof Structure](Jasper_RISC_V/docs/ps.png)
 
 - The achieved results are based on **constrained conditions**, excluding **memory-related instructions** and **interrupt occurrences** (which are planned for future verification efforts).  
 
-![Result](.Jasper_RISC_V/docs/result.png)
+![Result](Jasper_RISC_V/docs/result.png)
 
 This hierarchical approach significantly enhances proof convergence and provides a **scalable verification strategy** for complex designs. 🚀  
 
