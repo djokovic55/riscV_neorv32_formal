@@ -5,7 +5,7 @@ This repository contains the formal verification environment for the NEORV32 RIS
 ## Table of contents
 
 - [Run Project](#run-project)
-- [Implementaion Idea](#implementation-idea)
+- [Implementation Idea](#implementation-idea)
 - [Full Proof with the SST Method](#full-proof-with-the-sst-method)
 
 
@@ -22,7 +22,7 @@ A **free variable** is used to dynamically select any register (from **1 to 31**
 
 - When an **implemented instruction** is processed, the `instruction_supported` flag is asserted.  
 - If an instruction modifies a register (e.g., `ADD`, `ADDI`), the `chosen_reg_flag` is asserted—indicating that the **selected register’s value is updated by a supported instruction** (if the destination register matches the one chosen by the free variable).  
-- From this point onward, the selected register's value is **marked as known**—until an unsupported instruction modifies it. If an unsupported instruction occurs in between, the check is not triggered, as the source register's value may have changed unpredictably.  
+- From this point onward, the selected register's value is **known**—until an unsupported instruction modifies it. If an unsupported instruction occurs in between, the check is not triggered, as the source register's value may have changed unpredictably.  
 
 ### **How Is a Potential Bug Detected?**  
 Bugs are **caught through branch instructions**, which trigger only if one of the source registers is the **chosen register**.  
@@ -54,7 +54,7 @@ By leveraging the **free variable**, the system ensures that **every register is
 ## Full Proof with the SST Method  
 
 ### **Overview of the State Space Tunneling (SST) Method**  
-The **State Space Tunneling (SST) method** is a technique used to break down complex verification goals into smaller, more manageable sub-proofs, making convergence feasible for challenging properties. By strategically introducing **helper properties**, SST enables **faster proof stabilization** and enhances **state space exploration**.
+The **State Space Tunneling (SST) method** is a technique used to break down complex verification goals into smaller, more manageable sub-proofs, making convergence feasible for challenging properties. By strategically introducing **helper properties**, SST enables **faster proof closure** and enhances **state space exploration**.
 
 ### **Proof Organization Using JasperGold’s Proof Structure Feature**  
 Initially, the **main check without helpers** struggled to exceed a bound of **~17 even after a full day of runtime**. To improve convergence, a structured **helper hierarchy** was implemented using JasperGold’s **proof structure feature**.  
