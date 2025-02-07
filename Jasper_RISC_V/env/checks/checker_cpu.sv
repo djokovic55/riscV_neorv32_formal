@@ -95,6 +95,12 @@ input[33:0] dbus_rsp_i
   ////////////////////////////////////////////////////////////////////////////////
   // FUNCTIONS
   ////////////////////////////////////////////////////////////////////////////////
+
+  localparam XLEN = 32;
+  logic[31:0] tb_pc, tb_pc_next;
+  logic[31:0] dut_pc_gbox;
+  logic[6:0] opcode_gbox;
+
   function void pc_inc;
     begin
         tb_pc_next = dut_pc_gbox + 4;
@@ -118,7 +124,6 @@ input[33:0] dbus_rsp_i
   // PARAMETERS
   ////////////////////////////////////////////////////////////////////////////////
 
-  localparam XLEN = 32;
   typedef struct packed
                 {
                   logic known;
@@ -182,10 +187,10 @@ input[33:0] dbus_rsp_i
   // GRAY BOX SIGNALS
   ////////////////////////////////////////////////////////////////////////////////
 
+
   exec_state_t exec_state_gbox;
   assign exec_state_gbox = neorv32_cpu_control_inst.execute_engine.state;
 
-  logic[31:0] dut_pc_gbox;
   assign dut_pc_gbox = neorv32_cpu_control_inst.execute_engine.pc;
   
   logic[31:0] dut_next_pc_gbox;
@@ -206,7 +211,6 @@ input[33:0] dbus_rsp_i
   logic[2:0] funct3;
   assign funct3 = dut_inst_gbox[14:12];
 
-  logic[6:0] opcode_gbox;
   assign opcode_gbox = neorv32_cpu_control_inst.decode_aux.opcode;
 
   logic[31:0][31:0] dut_regs_gbox;
@@ -284,7 +288,6 @@ input[33:0] dbus_rsp_i
   assign exception = mem_req | trap_event;
   // assign exception = 1'b0;
 
-  logic[31:0] tb_pc, tb_pc_next;
   logic[4:0] rd, rs1, rs2;
   logic inst_supported;
   logic[11:0] imm12;

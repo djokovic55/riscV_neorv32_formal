@@ -23,39 +23,39 @@ use neorv32.neorv32_package.all;
 entity neorv32_cpu is
   generic (
     -- General --
-    HART_ID                    : std_ulogic_vector(31 downto 0); -- hardware thread ID
-    VENDOR_ID                  : std_ulogic_vector(31 downto 0); -- vendor's JEDEC ID
+    HART_ID                    : std_ulogic_vector(31 downto 0) := x"00000000"; -- hardware thread ID
+    VENDOR_ID                  : std_ulogic_vector(31 downto 0) := x"00000000"; -- vendor's JEDEC ID
     CPU_BOOT_ADDR              : std_ulogic_vector(31 downto 0) := x"00000000"; -- cpu boot address
-    CPU_DEBUG_PARK_ADDR        : std_ulogic_vector(31 downto 0); -- cpu debug mode parking loop entry address
-    CPU_DEBUG_EXC_ADDR         : std_ulogic_vector(31 downto 0); -- cpu debug mode exception entry address
+    CPU_DEBUG_PARK_ADDR        : std_ulogic_vector(31 downto 0) := x"00000000"; -- cpu debug mode parking loop entry address
+    CPU_DEBUG_EXC_ADDR         : std_ulogic_vector(31 downto 0) := x"00000000"; -- cpu debug mode exception entry address
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_A      : boolean; -- implement atomic memory operations extension?
-    CPU_EXTENSION_RISCV_B      : boolean; -- implement bit-manipulation extension?
-    CPU_EXTENSION_RISCV_C      : boolean; -- implement compressed extension?
-    CPU_EXTENSION_RISCV_E      : boolean; -- implement embedded RF extension?
-    CPU_EXTENSION_RISCV_M      : boolean; -- implement mul/div extension?
-    CPU_EXTENSION_RISCV_U      : boolean; -- implement user mode extension?
-    CPU_EXTENSION_RISCV_Zfinx  : boolean; -- implement 32-bit floating-point extension (using INT reg!)
-    CPU_EXTENSION_RISCV_Zicntr : boolean; -- implement base counters?
-    CPU_EXTENSION_RISCV_Zicond : boolean; -- implement integer conditional operations?
-    CPU_EXTENSION_RISCV_Zihpm  : boolean; -- implement hardware performance monitors?
-    CPU_EXTENSION_RISCV_Zmmul  : boolean; -- implement multiply-only M sub-extension?
-    CPU_EXTENSION_RISCV_Zxcfu  : boolean; -- implement custom (instr.) functions unit?
-    CPU_EXTENSION_RISCV_Sdext  : boolean; -- implement external debug mode extension?
-    CPU_EXTENSION_RISCV_Sdtrig : boolean; -- implement trigger module extension?
-    CPU_EXTENSION_RISCV_Smpmp  : boolean; -- implement physical memory protection?
+    CPU_EXTENSION_RISCV_A      : boolean := false; -- implement atomic memory operations extension?
+    CPU_EXTENSION_RISCV_B      : boolean := false; -- implement bit-manipulation extension?
+    CPU_EXTENSION_RISCV_C      : boolean := false; -- implement compressed extension?
+    CPU_EXTENSION_RISCV_E      : boolean := false; -- implement embedded RF extension?
+    CPU_EXTENSION_RISCV_M      : boolean := false; -- implement mul/div extension?
+    CPU_EXTENSION_RISCV_U      : boolean := false; -- implement user mode extension?
+    CPU_EXTENSION_RISCV_Zfinx  : boolean := false; -- implement 32-bit floating-point extension (using INT reg!)
+    CPU_EXTENSION_RISCV_Zicntr : boolean := false; -- implement base counters?
+    CPU_EXTENSION_RISCV_Zicond : boolean := false; -- implement integer conditional operations?
+    CPU_EXTENSION_RISCV_Zihpm  : boolean := false; -- implement hardware performance monitors?
+    CPU_EXTENSION_RISCV_Zmmul  : boolean := false; -- implement multiply-only M sub-extension?
+    CPU_EXTENSION_RISCV_Zxcfu  : boolean := false; -- implement custom (instr.) functions unit?
+    CPU_EXTENSION_RISCV_Sdext  : boolean := false; -- implement external debug mode extension?
+    CPU_EXTENSION_RISCV_Sdtrig : boolean := false; -- implement trigger module extension?
+    CPU_EXTENSION_RISCV_Smpmp  : boolean := false; -- implement physical memory protection?
     -- Tuning Options --
-    FAST_MUL_EN                : boolean; -- use DSPs for M extension's multiplier
-    FAST_SHIFT_EN              : boolean; -- use barrel shifter for shift operations
-    REGFILE_HW_RST             : boolean; -- implement full hardware reset for register file
+    FAST_MUL_EN                : boolean := false; -- use DSPs for M extension's multiplier
+    FAST_SHIFT_EN              : boolean := false; -- use barrel shifter for shift operations
+    REGFILE_HW_RST             : boolean := true; -- implement full hardware reset for register file
     -- Physical Memory Protection (PMP) --
-    PMP_NUM_REGIONS            : natural range 0 to 16; -- number of regions (0..16)
-    PMP_MIN_GRANULARITY        : natural; -- minimal region granularity in bytes, has to be a power of 2, min 4 bytes
-    PMP_TOR_MODE_EN            : boolean; -- implement TOR mode
-    PMP_NAP_MODE_EN            : boolean; -- implement NAPOT/NA4 modes
+    PMP_NUM_REGIONS            : natural range 0 to 16 := 0; -- number of regions (0..16)
+    PMP_MIN_GRANULARITY        : natural := 4; -- minimal region granularity in bytes, has to be a power of 2, min 4 bytes
+    PMP_TOR_MODE_EN            : boolean := true; -- implement TOR mode
+    PMP_NAP_MODE_EN            : boolean := true; -- implement NAPOT/NA4 modes
     -- Hardware Performance Monitors (HPM) --
-    HPM_NUM_CNTS               : natural range 0 to 13; -- number of implemented HPM counters (0..13)
-    HPM_CNT_WIDTH              : natural range 0 to 64  -- total size of HPM counters (0..64)
+    HPM_NUM_CNTS               : natural range 0 to 13 := 0; -- number of implemented HPM counters (0..13)
+    HPM_CNT_WIDTH              : natural range 0 to 64 := 40 -- total size of HPM counters (0..64)
   );
   port (
     -- global control --
