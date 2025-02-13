@@ -306,7 +306,7 @@ input[33:0] dbus_rsp_i
   logic bgeu1_taken, bgeu2_taken, bgeu_not_taken, bgeu1_not_taken, bgeu2_not_taken;
 
   // for case splitting
-  logic sub_inst, or_inst, addi_inst, beq_inst, jal_inst, jalr_inst;
+  logic sub_inst, or_inst, addi_inst, beq_inst, jal_inst;
   logic bne_inst, blt_inst, bge_inst, bltu_inst, bgeu_inst;
   logic branch_supported;
   

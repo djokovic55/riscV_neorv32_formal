@@ -8,15 +8,21 @@ set design neorv32_cpu
 # compile DUT and SVA props
 
 # analyze -format vhdl -library neorv32 -vcs {-f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_cpu.f}
-analyze -format vhdl -work neorv32 -vcs {-f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_cpu.f}
+## --------------- To Analyze SV Files ----------------- ##
+# analyze -format sverilog {Jasper_RISC_V/env/checks/checker_cpu.sv Jasper_RISC_V/env/cpu_bind.sv} 
+# analyze -format vhdl -work neorv32 -vcs {-f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_cpu.f}
+analyze -vcs {-f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_cpu.f} -format vhdl -work neorv32 
 # analyze -format vhdl -vcs {-f RISC_V_NEORV32/neorv32-main/neorv32-main/rtl/file_list_cpu.f}
 
 ## --------------- To Analyze SV Files ----------------- ##
-analyze -format sverilog {Jasper_RISC_V/env/checks/checker_cpu.sv Jasper_RISC_V/env/cpu_bind.sv} 
-# analyze -format sverilog -vcs {Jasper_RISC_V/env/checks/checker_cpu.sv} 
+analyze {Jasper_RISC_V/env/checks/checker_cpu.sv Jasper_RISC_V/env/cpu_bind.sv} -format sverilog 
+
+set search_path "./"
+set link_library " "
 
 # elaborate checker_cpu -sva 
 # elaborate $design -work neorv32 -parameters -vcs {-gv (HPM_NUM_CNTS=>0,HPM_CNT_WIDTH=>40)} -sva 
+# elaborate $design -work neorv32 -vcs "-lca -sva_bind_enable cpu_bind"
 elaborate $design -work neorv32 -sva 
 
 # -param HPM_NUM_CNTS 0 \

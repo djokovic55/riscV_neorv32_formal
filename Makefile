@@ -8,4 +8,14 @@ cpu_check_vcf:
 .PHONY: clean
 clean:
 	rm -rf jgproject
+	rm -f hector*
+	rm -rf vc*
+	rm -rf .vc*
+	rm -rf novas*
+	rm -rf .simon*
+	rm -rf verdiLog
+	rm -rf .cert*
+	rm -f ProofId*
+	rm -f verdi*
+	rm -rf sysProgress*
 	
